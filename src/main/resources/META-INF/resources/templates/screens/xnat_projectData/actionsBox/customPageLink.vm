@@ -1,0 +1,6 @@
+#set ($SITE_ROOT = $content.getURI(""))
+#set ($projectId = $project.getId())
+
+<li id="show-custom-page-action" class="yuimenuitem">
+    <a class="yuimenuitemlabel" href="${SITE_ROOT}/app/template/Page.vm?view=unicorn/example&project=${projectId}">Link to Custom Page</a>
+</li>
