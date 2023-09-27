@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="transporter">
+        <append>false</append>
+        <file>${xnat.home}/logs/transporter.log</file>
+        <encoder>
+            <pattern>%d [%t] %-5p %c - %m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${xnat.home}/logs/transporter.log.%d{yyyy-MM-dd}</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+    <logger additivity="false" level="DEBUG" name="org.nrg.xnatx.plugins.transporter">
+        <appender-ref ref="containers"/>
+    </logger>
+</configuration>
