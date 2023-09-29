@@ -57,7 +57,9 @@ dependencies {
     implementation "org.nrg:framework"
     implementation "io.springfox:springfox-swagger2"
     implementation "io.springfox:springfox-swagger-ui"
+    implementation "org.springframework:spring-web"
     implementation 'org.projectlombok:lombok:1.18.24'
+    implementation "com.vladmihalcea:hibernate-types-43"
     testImplementation "com.fasterxml.jackson.datatype:jackson-datatype-guava"
     testImplementation "junit:junit"
     testImplementation "com.h2database:h2"
@@ -68,6 +70,7 @@ dependencies {
     testImplementation "org.springframework.security:spring-security-config"
     testImplementation "org.springframework:spring-jdbc"
     testImplementation "org.springframework:spring-orm"
+    testImplementation "org.springframework:spring-webmvc"
     testImplementation "org.apache.commons:commons-dbcp2"
     compileOnly "log4j:log4j"
 }

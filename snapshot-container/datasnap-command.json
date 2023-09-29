@@ -1,0 +1,86 @@
+{
+    "name": "DataSnap",
+    "description": "Create a DataSnap manifest.",
+    "label": "DataSnap",
+    "version": "1.0",
+    "schema-version": "1.0",
+    "image": "python:python:3.11-slim",
+    "type": "docker",
+    "command-line": "datasnap.py /input",
+    "override-entrypoint": true,
+    "mounts": [
+        {
+            "name": "input",
+            "writable": true,
+            "path": "/input"
+        }
+    ],
+    "environment-variables": {
+        "PROJECT_ID": "#PROJECT_ID#",
+        "DATASNAP_NAME": "#DATASNAP_NAME#",
+        "DATASNAP_DESC": "#DATASNAP_DESC#"
+    },
+    "ports": {},
+    "inputs": [
+        {
+            "name": "name",
+            "description": "DataSnap name.",
+            "type": "string",
+            "required": true,
+            "replacement-key": "#DATASNAP_NAME#"
+        },
+        {
+            "name": "description",
+            "description": "DataSanp description.",
+            "type": "string",
+            "required": true,
+            "replacement-key": "#DATASNAP_DESC#"
+        },
+        {
+            "name": "project-id",
+            "description": "",
+            "type": "string",
+            "required": true,
+            "replacement-key": "#PROJECT_ID#"
+        }
+    ],
+    "outputs": [
+    ],
+    "xnat": [
+        {
+            "name": "DataSnap Project",
+            "description": "",
+            "label": "datasnap-project",
+            "contexts": ["xnat:ProjectData"],
+            "external-inputs": [
+                {
+                    "name": "project",
+                    "description": "",
+                    "type": "Project",
+                    "provides-files-for-command-mount": "input",
+                    "load-children": false
+                }
+            ],
+            "derived-inputs": [
+                {
+                    "name": "project",
+                    "type": "Project",
+                    "required": true,
+                    "user-settable": false,
+                    "load-children": true,
+                    "derived-from-wrapper-input": "session"
+                },
+                {
+                    "name": "project-id",
+                    "type": "string",
+                    "required": true,
+                    "load-children": true,
+                    "derived-from-wrapper-input": "project",
+                    "derived-from-xnat-object-property": "id",
+                    "provides-value-for-command-input": "project-id"
+                }
+            ],
+            "output-handlers": []
+        }
+    ]
+}

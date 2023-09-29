@@ -22,8 +22,8 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
         name = "Transporter",
         description = "XNAT Transporter Plugin",
         logConfigurationFile = "META-INF/resources/transporter-logback.xml",
-        entityPackages = "org.nrg.xnatx.plugins.transporter.model.datasnap.entity")
-@ComponentScan(value = {"org.nrg.xnatx.plugins.transporter.rest","org.nrg.xnatx.plugins.transporter.services.impl"},
+        entityPackages = "org.nrg.xnatx.plugins.transporter.entities")
+@ComponentScan(value = "org.nrg.xnatx.plugins.transporter",
         excludeFilters = @Filter(type = FilterType.REGEX, pattern = ".*TestConfig.*", value = {})
 )
 @Import({RootConfig.class})

@@ -1,0 +1,44 @@
+{
+    "label": "TestSnap",
+    "description": "Test DataSnap file manifest.",
+    "content": [
+        {
+            "id": "XNAT_S00001",
+            "label": "XNAT_S00001",
+            "xnat-typeuri": "/data/projects/ABCT/subjects/XNAT_S00001",
+            "children": [
+                {
+                    "id": "XNAT_E00001",
+                    "label": "XNAT_E00001",
+                    "xnat-typeuri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001",
+                    "children": [
+                        {
+                            "id": "4",
+                            "label": "",
+                            "xnat-typeuri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4",
+                            "children": [
+                                {
+                                    "id": "1.MR.head_DHead.4.134.20061214.091206.156000.3879918510.dcm",
+                                    "label": "",
+                                    "uri": "/data/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.134.20061214.091206.156000.3879918510.dcm",
+                                    "file-type": "FILE",
+                                    "children": []
+                                },
+                                {
+                                    "id": "1.MR.head_DHead.4.138.20061214.091206.156000.3966518526.dcm",
+                                    "label": "",
+                                    "uri": "/data/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.138.20061214.091206.156000.3966518526.dcm",
+                                    "file-type": "FILE",
+                                    "children": []
+                                }
+                            ],
+                            "file-type": "DIRECTORY"
+                        }
+                    ],
+                    "file-type": "DIRECTORY"
+                }
+            ],
+            "file-type": "DIRECTORY"
+        }
+    ]
+}
