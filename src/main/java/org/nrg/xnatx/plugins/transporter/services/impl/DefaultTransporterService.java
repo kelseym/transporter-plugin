@@ -1,20 +1,31 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.nrg.action.ClientException;
+import org.nrg.action.ServerException;
 import org.nrg.framework.exceptions.NotFoundException;
+import org.nrg.xdat.bean.CatCatalogBean;
+import org.nrg.xdat.model.XnatAbstractresourceI;
+import org.nrg.xdat.om.XnatResourcecatalog;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnat.archive.ResourceData;
+import org.nrg.xnat.helpers.uri.URIManager;
+import org.nrg.xnat.helpers.uri.archive.ResourceURII;
 import org.nrg.xnat.services.archive.CatalogService;
+import org.nrg.xnat.utils.CatalogUtils;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
-import org.nrg.xnatx.plugins.transporter.model.ResolvedDataSnap;
-import org.nrg.xnatx.plugins.transporter.model.ResolvedSnapItem;
+import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.SnapItem;
+import org.nrg.xnatx.plugins.transporter.model.SnapItem;
+import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,13 +33,16 @@ import java.util.stream.Collectors;
 @Service
 public class DefaultTransporterService implements TransporterService {
 
+    private DataSnapResolutionService dataSnapResolutionService;
     private DataSnapService dataSnapService;
     private final CatalogService catalogService;
 
 
     @Autowired
-    public DefaultTransporterService(DataSnapService dataSnapService,
+    public DefaultTransporterService(DataSnapResolutionService dataSnapResolutionService,
+                                     DataSnapService dataSnapService,
                                      final CatalogService catalogService) {
+        this.dataSnapResolutionService = dataSnapResolutionService;
         this.dataSnapService = dataSnapService;
         this.catalogService = catalogService;
     }
@@ -51,10 +65,10 @@ public class DefaultTransporterService implements TransporterService {
     }
 
     @Override
-    public ResolvedDataSnap getResolvedDataSnap(UserI user, String id) {
+    public DataSnap getResolvedDataSnap(UserI user, String id) {
         DataSnap dataSnap = getDataSnap(user, id);
         if (dataSnap != null) {
-            return resolveDataSnap(dataSnap);
+            return dataSnapResolutionService.resolveDataSnap(dataSnap);
         }
         return null;
     }
@@ -65,39 +79,7 @@ public class DefaultTransporterService implements TransporterService {
     }
 
 
-    @Override
-    public ResolvedDataSnap resolveDataSnap(DataSnap dataSnap) {
-        // Resolve absolute paths based on DataSnap URI property
-        List<ResolvedSnapItem> resolvedSnapItems = dataSnap.getContent().stream()
-                .map(snapItem -> resolveSnapItem(snapItem))
-                .collect(Collectors.toList());
 
-        return ResolvedDataSnap.builder()
-                .id(dataSnap.getId())
-                .label(dataSnap.getLabel())
-                .description(dataSnap.getDescription())
-                .content(resolvedSnapItems)
-                .build();
-    }
 
-    private ResolvedSnapItem resolveSnapItem(SnapItem item) {
-        return ResolvedSnapItem.builder()
-                .uri(item.getUri())
-                .fileType(item.getFileType())
-                .path(resolveHostPath(item))
-                .build();
-    }
-
-    private String resolveHostPath(SnapItem item) {
-        try {
-            return catalogService
-                    .getResourceDataFromUri(item.getUri(), item.getFileType() == SnapItem.FileType.FILE ? true : false)
-                    .getResourceFilePath();
-
-        } catch (ClientException e) {
-            log.error("Error resolving host path for item: " + item.getUri(), e);
-        }
-        return null;
-    }
 
 }

@@ -8,16 +8,14 @@ import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.daos.DataSnapEntityDao;
 import org.nrg.xnatx.plugins.transporter.entities.DataSnapEntity;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
-import org.nrg.xnatx.plugins.transporter.model.ResolvedDataSnap;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.Nonnull;
 import java.beans.Transient;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,9 +31,9 @@ public class DefaultDataSnapService extends AbstractHibernateEntityService<DataS
     }
 
     @Override
-    public DataSnap getDataSnap(String owner, Long id) throws NotFoundException {
+    public DataSnap getDataSnap(@Nonnull String owner, Long id) throws NotFoundException {
         DataSnapEntity entity = get(id);
-        return entity.getOwner() != owner ? null : toPojo(entity);
+        return owner.equals(entity.getOwner()) ? toPojo(entity) : null;
     }
 
     @Override
@@ -63,7 +61,7 @@ public class DefaultDataSnapService extends AbstractHibernateEntityService<DataS
     @Transient
     private DataSnap toPojo(@Nonnull final DataSnapEntity entity) {
         try {
-            return entity.getSnap();
+            return entity.getSnap().toBuilder().id(entity.getId()).build();
         } catch (Exception e) {
             throw new RuntimeException("An error occurred trying to convert the data snap to an entity", e);
         }
@@ -72,7 +70,7 @@ public class DefaultDataSnapService extends AbstractHibernateEntityService<DataS
     @Nonnull
     @Transient
     private List<DataSnap> toPojo(@Nonnull final List<DataSnapEntity> entities) {
-        return (List<DataSnap>) entities.stream().map(this::toPojo);
+        return (List<DataSnap>) entities.stream().map(this::toPojo).collect(Collectors.toList());
     }
 
 

@@ -72,8 +72,8 @@ public class TransporterRestApi extends AbstractXapiRestController {
     @ResponseBody
     public DataSnap getSnap(final @PathVariable String id, @RequestParam(required = false, defaultValue = "false") boolean resolved) {
         return resolved ?
-                transporterService.getDataSnap(getUser(), id) :
-                transporterService.getResolvedDataSnap(getUser(), id);
+                transporterService.getResolvedDataSnap(getUser(), id) :
+                transporterService.getDataSnap(getUser(), id);
     }
 
 

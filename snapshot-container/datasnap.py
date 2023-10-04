@@ -3,33 +3,41 @@ import json
 import sys
 import xnat
 import requests
-
+import re
 
 def generate_snap_item(subject_or_experiment_or_scan):
     item = {
         "id": subject_or_experiment_or_scan.id if hasattr(subject_or_experiment_or_scan, 'id') else "",
-        "label": subject_or_experiment_or_scan.id if hasattr(subject_or_experiment_or_scan, 'label') else "",
-        "xnat-type"
+        "label": subject_or_experiment_or_scan.label if hasattr(subject_or_experiment_or_scan, 'label') else "",
+        "xnat-type" : "",
         "uri": subject_or_experiment_or_scan.uri,
         "children": []
     }
 
-    if hasattr(subject_or_experiment_or_scan, 'scans'):  # This is an experiment
-        item["file-type"] = "DIRECTORY"
+    # Collect Resources
+    if 'session' in subject_or_experiment_or_scan.xpath.lower():
+        item["xnat-type"] = "SESSION"
         for scan in subject_or_experiment_or_scan.scans.values():
             item["children"].append(generate_snap_item(scan))
-    elif hasattr(subject_or_experiment_or_scan, 'experiments'):  # This is a subject
-        item["file-type"] = "DIRECTORY"
+    elif 'subject' in subject_or_experiment_or_scan.xpath.lower():
+        item["xnat-type"] = "SUBJECT"
         for experiment in subject_or_experiment_or_scan.experiments.values():
             item["children"].append(generate_snap_item(experiment))
-    elif hasattr(subject_or_experiment_or_scan, 'files'):  # This is a scan
-        item["file-type"] = "DIRECTORY"
+    elif 'scan' in subject_or_experiment_or_scan.xpath.lower():
+        item["xnat-type"] = "SCAN"
+        for resource in subject_or_experiment_or_scan.resources.values():
+            item["children"].append(generate_snap_item(resource))
+    elif 'resource' in subject_or_experiment_or_scan.xpath.lower():
+        item["xnat-type"] = "RESOURCE"
+        # Replace the trailing ID in this resources uri with its label
+        item["uri"] = re.sub(r'(\d+)$', item['label'], item["uri"])
         for file in subject_or_experiment_or_scan.files.values():
             item["children"].append({
                 "id": file.id if hasattr(file, 'id') else "",
                 "label": file.id if hasattr(file, 'label') else "",
                 "uri": file.uri,
                 "file-type": "FILE",
+                "xnat-type": "FILE",
                 "children": []
             })
 

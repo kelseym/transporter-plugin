@@ -3,7 +3,6 @@ package org.nrg.xnatx.plugins.transporter.services;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
-import org.nrg.xnatx.plugins.transporter.model.ResolvedDataSnap;
 
 import java.util.List;
 
