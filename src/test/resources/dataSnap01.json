@@ -1,44 +1,55 @@
 {
-    "label": "TestSnap",
-    "description": "Test DataSnap file manifest.",
+    "label": "DefaultName",
+    "description": "DefaultDescription",
     "content": [
         {
             "id": "XNAT_S00001",
-            "label": "XNAT_S00001",
-            "xnat-typeuri": "/data/projects/ABCT/subjects/XNAT_S00001",
+            "label": "Patient_007382",
+            "xnat-type": "SUBJECT",
+            "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001",
             "children": [
                 {
                     "id": "XNAT_E00001",
-                    "label": "XNAT_E00001",
-                    "xnat-typeuri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001",
+                    "label": "Patient_007382",
+                    "xnat-type": "SESSION",
+                    "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001",
                     "children": [
                         {
                             "id": "4",
                             "label": "",
-                            "xnat-typeuri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4",
+                            "xnat-type": "SCAN",
+                            "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4",
                             "children": [
                                 {
-                                    "id": "1.MR.head_DHead.4.134.20061214.091206.156000.3879918510.dcm",
-                                    "label": "",
-                                    "uri": "/data/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.134.20061214.091206.156000.3879918510.dcm",
-                                    "file-type": "FILE",
-                                    "children": []
-                                },
-                                {
-                                    "id": "1.MR.head_DHead.4.138.20061214.091206.156000.3966518526.dcm",
-                                    "label": "",
-                                    "uri": "/data/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.138.20061214.091206.156000.3966518526.dcm",
-                                    "file-type": "FILE",
-                                    "children": []
+                                    "id": "2",
+                                    "label": "DICOM",
+                                    "xnat-type": "RESOURCE",
+                                    "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/DICOM",
+                                    "children": [
+                                        {
+                                            "id": "1.MR.head_DHead.4.147.20061214.091206.156000.2920518546.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.147.20061214.091206.156000.2920518546.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.123.20061214.091206.156000.0164918466.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.123.20061214.091206.156000.0164918466.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        }
+                                    ]
                                 }
-                            ],
-                            "file-type": "DIRECTORY"
+                            ]
                         }
-                    ],
-                    "file-type": "DIRECTORY"
+                    ]
                 }
-            ],
-            "file-type": "DIRECTORY"
+            ]
         }
     ]
 }
+

@@ -54,9 +54,9 @@ if __name__ == "__main__":
     # Get environment variables
     datasnap_name = os.environ.get('DATASNAP_NAME', 'DefaultName')
     datasnap_desc = os.environ.get('DATASNAP_DESC', 'DefaultDescription')
-    xnat_host = os.environ.get('XNAT_HOST')
-    xnat_user = os.environ.get('XNAT_USER')
-    xnat_pass = os.environ.get('XNAT_PASS')
+    xnat_host = os.environ.get('XNAT_HOST', 'http://localhost')
+    xnat_user = os.environ.get('XNAT_USER', 'admin')
+    xnat_pass = os.environ.get('XNAT_PASS', 'admin')
     datasnap_endpoint = xnat_host + "/xapi/transporter/datasnap"
     datasnap = ""
 
