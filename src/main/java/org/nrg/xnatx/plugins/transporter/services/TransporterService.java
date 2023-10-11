@@ -1,8 +1,11 @@
 package org.nrg.xnatx.plugins.transporter.services;
 
+import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
+import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface TransporterService {
@@ -14,4 +17,7 @@ public interface TransporterService {
 
     Boolean storeDataSnap(UserI user, DataSnap dataSnap);
 
+    void deleteDataSnap(UserI user, String id) throws NotFoundException, UnauthorizedException;
+
+    void mirrorDataSnap(UserI user, String id) throws NotFoundException, IOException;
 }

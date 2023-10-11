@@ -6,11 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
-
 import javax.annotation.Nullable;
-import javax.validation.constraints.Null;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Data
 @Builder(toBuilder = true)
@@ -22,7 +21,7 @@ public class SnapItem {
     @JsonProperty("file-type") private FileType fileType;
     @Nullable @JsonProperty("xnat-type") private String xnatType;
     private String uri;
-    @Nullable private String path;
+    @Nullable @JsonProperty("path") private String path;
     @Nullable private List<SnapItem> children;
 
     public enum FileType {
@@ -39,4 +38,12 @@ public class SnapItem {
         RESOURCE,
         FILE
     }
+
+    public Stream<SnapItem> flatten() {
+        return Stream.concat(
+                Stream.of(this),
+                children == null ? Stream.empty() : children.stream().flatMap(SnapItem::flatten)
+        );
+    }
+
 }

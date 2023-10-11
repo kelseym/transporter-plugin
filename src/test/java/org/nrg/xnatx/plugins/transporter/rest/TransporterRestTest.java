@@ -112,4 +112,18 @@ public class TransporterRestTest {
 
     }
 
+    @Test
+    public void mirrorSnapData() throws Exception {
+        final String path = "/xapi/transporter/datasnap/mirror/";
+
+        final MockHttpServletRequestBuilder request = post(path)
+                .with(authentication(ADMIN_AUTH))
+                .with(csrf())
+                .with(testSecurityContext());
+
+        ResultActions response = mockMvc.perform(request)
+                .andExpect(status().isOk());
+
+    }
+
 }

@@ -15,10 +15,11 @@ import java.util.List;
 public class Payload {
 
     private Long id;
+    private Long dataSnapId;
     private String name;
     private String description;
-    private String rootHostPath;
     private List<FileManifest> fileManifests;
+    private TransporterPathMapping transporterPathMapping;
 
     @Data
     @Builder
@@ -26,7 +27,7 @@ public class Payload {
     @AllArgsConstructor
     public static class FileManifest {
         private String xnatUri;
-        private String hostpath;
+        private String serverPath;
         private String snapshotPath;
     }
 

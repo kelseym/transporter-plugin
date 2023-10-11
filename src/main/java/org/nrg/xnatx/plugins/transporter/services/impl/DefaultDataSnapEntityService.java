@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.framework.orm.hibernate.AbstractHibernateEntityService;
-import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.daos.DataSnapEntityDao;
+import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.entities.DataSnapEntity;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
-import org.nrg.xnatx.plugins.transporter.services.DataSnapService;
+import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @Transactional
-public class DefaultDataSnapService extends AbstractHibernateEntityService<DataSnapEntity, DataSnapEntityDao>  implements DataSnapService {
+public class DefaultDataSnapEntityService extends AbstractHibernateEntityService<DataSnapEntity, DataSnapEntityDao>  implements DataSnapEntityService {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -31,7 +31,7 @@ public class DefaultDataSnapService extends AbstractHibernateEntityService<DataS
     }
 
     @Override
-    public DataSnap getDataSnap(@Nonnull String owner, Long id) throws NotFoundException {
+    public DataSnap getDataSnap(@Nonnull String owner, Long id) throws NotFoundException{
         DataSnapEntity entity = get(id);
         return owner.equals(entity.getOwner()) ? toPojo(entity) : null;
     }
@@ -39,6 +39,16 @@ public class DefaultDataSnapService extends AbstractHibernateEntityService<DataS
     @Override
     public List<DataSnap> getDataSnaps(String owner) {
         return toPojo(this.getDao().findByOwner(owner));
+    }
+
+    @Override
+    public void deleteDataSnap(@Nonnull String owner, Long id) throws NotFoundException, UnauthorizedException {
+        DataSnapEntity entity = get(id);
+        if (owner.equals(entity.getOwner())) {
+            delete(entity);
+        } else {
+            throw new UnauthorizedException("User " + owner + " is not authorized to delete data snap " + id);
+        }
     }
 
 
