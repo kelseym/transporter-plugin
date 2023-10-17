@@ -33,7 +33,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -62,11 +64,11 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
 
     private DataSnap mirrorDataSnap(@Nonnull DataSnap dataSnap, @Nonnull Path targetPath) throws RuntimeException {
         // Iterate over each SnapItem and mirror the file/directory to the target directory
-        dataSnap.setMirrorRootPath(targetPath.toString());
-        dataSnap.streamSnapItems().forEach(snapItem -> {
+        Path originalRootPath = Paths.get(dataSnap.getRootPath());
+        dataSnap.streamSnapItems().filter(SnapItem::isMirrorable).forEach(snapItem -> {
             try {
-                Path sourcePath = Paths.get(dataSnap.relativeToAbsolutePath(snapItem.getPath()));
-                Path destinationPath = targetPath.resolve(dataSnap.absoluteToRelativePath(snapItem.getPath()));
+                Path sourcePath = originalRootPath.resolve(snapItem.getPath());
+                Path destinationPath = targetPath.resolve(snapItem.getPath());
                 if (Files.exists(destinationPath)) {
                     throw new IOException("Destination path already exists: " + destinationPath.toString());
                 }
@@ -80,6 +82,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                 throw new RuntimeException(e);
             }
         });
+        dataSnap.setRootPath(targetPath.toString());
         return dataSnap;
     }
 
@@ -106,12 +109,18 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
     }
 
     private void validateSnapItem(SnapItem snapItem, Boolean expectResolved, Map errors) {
-
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public DataSnap resolveDataSnap(DataSnap dataSnap) throws RuntimeException {
         dataSnap.streamSnapItems().forEach(this::resolveHostPath);
+        Optional<String> rootPath = findCommonRoot(dataSnap.streamSnapItems().map(SnapItem::getPath));
+        if (rootPath.isPresent()){
+            dataSnap.setRootPath(rootPath.get());
+            Path root = Paths.get(rootPath.toString());
+            dataSnap.streamSnapItems().forEach(si -> si.setPath(root.relativize(Paths.get(si.getPath())).toString()));
+        }
         return dataSnap;
     }
 
@@ -153,6 +162,24 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                 throw new RuntimeException("Could not resolve host path for resource: " + item.getUri(), e.getCause());
             }
         }
+    }
+
+    private static Optional<String> findCommonRoot(Stream<String> paths) {
+        return paths.map(Paths::get)
+                .reduce(DefaultDataSnapResolutionService::getCommonPath)
+                .map(Path::toString);
+    }
+
+    private static Path getCommonPath(Path path1, Path path2) {
+        int len = Math.min(path1.getNameCount(), path2.getNameCount());
+        Path common = path1.getRoot();
+        for (int i = 0; i < len; i++) {
+            if (!path1.getName(i).equals(path2.getName(i))) {
+                return path1.subpath(0, i);
+            }
+        }
+
+        return path1.subpath(0, len);
     }
 
     // TODO: Define a unique directory (in xdat) to store snapshots, e.g. /data/xnat/snapshots

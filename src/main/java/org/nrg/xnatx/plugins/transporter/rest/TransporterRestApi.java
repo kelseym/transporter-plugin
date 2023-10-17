@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
@@ -62,14 +63,16 @@ public class TransporterRestApi extends AbstractXapiRestController {
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/datasnap"}, method = POST, consumes = JSON)
     @ApiOperation(value = "Accepts and processes the DataSnap payload.")
     public ResponseEntity<String> postSnap(final @RequestBody DataSnap dataSnap) {
-        Boolean success = transporterService.storeDataSnap(getUser(), dataSnap);
-        return success ?
-                ResponseEntity.ok("DataSnap successfully received and processed!") :
-                ResponseEntity.status(500).body("DataSnap failed to be processed.");
+        Optional<DataSnap> result = transporterService.storeDataSnap(getUser(), dataSnap);
+        if (result.isPresent()) {
+            return ResponseEntity.ok("DataSnap " + result.get().getLabel() + " successfully received and processed!");
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to store DataSnap");
+        }
     }
 
     // REST Endpoint to respond to request for available snapshots
-    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap"}, method = GET)
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnaps"}, method = GET)
     @ApiOperation(value = "Get available snapshots.")
     @ResponseBody
     public List<DataSnap> getSnaps() {
@@ -94,6 +97,19 @@ public class TransporterRestApi extends AbstractXapiRestController {
         transporterService.deleteDataSnap(getUser(), String.valueOf(id));
         return ResponseEntity.noContent().build();
     }
+
+    // REST Endpoint to DELETE all snapshots for a given user
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnaps"}, method = DELETE)
+    @ApiOperation(value = "Delete all snapshots for user.")
+    public ResponseEntity<Void> delete(final @RequestParam(required = false, defaultValue = "false") boolean verify) throws UnauthorizedException {
+        if (verify) {
+            transporterService.deleteDataSnaps(getUser());
+            return ResponseEntity.noContent().build();
+        }
+        throw new UnauthorizedException("Verification required to delete all snapshots.");
+
+    }
+
 
     // REST Endpoint to set transporter path mapping
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)

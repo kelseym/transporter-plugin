@@ -28,7 +28,6 @@ public class DataSnap {
     private String label;
     @Nullable private String description;
     private String rootPath;
-    @Nullable private String mirrorRootPath;
     private List<SnapItem> content;
 
     @JsonIgnore
@@ -45,4 +44,5 @@ public class DataSnap {
     public String relativeToAbsolutePath(String relativePath) {
         return FilenameUtils.concat(rootPath, relativePath);
     }
+
 }

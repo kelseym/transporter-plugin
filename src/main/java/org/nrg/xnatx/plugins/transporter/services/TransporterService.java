@@ -5,8 +5,10 @@ import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 public interface TransporterService {
     List<DataSnap> getDataSnaps(UserI user);
@@ -15,9 +17,11 @@ public interface TransporterService {
 
     DataSnap getResolvedDataSnap(UserI user, String id);
 
-    Boolean storeDataSnap(UserI user, DataSnap dataSnap);
+    Optional<DataSnap> storeDataSnap(UserI user, DataSnap dataSnap);
 
     void deleteDataSnap(UserI user, String id) throws NotFoundException, UnauthorizedException;
 
-    void mirrorDataSnap(UserI user, String id) throws NotFoundException, IOException;
+    void deleteDataSnaps(@Nonnull UserI user) throws UnauthorizedException;
+
+    Optional<DataSnap> mirrorDataSnap(UserI user, String id) throws NotFoundException, IOException;
 }

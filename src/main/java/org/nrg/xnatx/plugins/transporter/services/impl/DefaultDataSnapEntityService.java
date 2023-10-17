@@ -1,6 +1,7 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.framework.orm.hibernate.AbstractHibernateEntityService;
@@ -25,20 +26,23 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Long addDataSnap(String owner, DataSnap dataSnap) {
+    public DataSnap addDataSnap(String owner, DataSnap dataSnap) {
         DataSnapEntity entity = create(fromPojo(owner, dataSnap));
-        return entity.getId();
+        return toPojo(entity, true);
     }
 
     @Override
     public DataSnap getDataSnap(@Nonnull String owner, Long id) throws NotFoundException{
         DataSnapEntity entity = get(id);
-        return owner.equals(entity.getOwner()) ? toPojo(entity) : null;
+        return owner.equals(entity.getOwner()) ? toPojo(entity, true) : null;
     }
 
     @Override
     public List<DataSnap> getDataSnaps(String owner) {
-        return toPojo(this.getDao().findByOwner(owner));
+        List<DataSnapEntity> snaps = this.getDao().findByOwner(owner);
+        return snaps != null ?
+                toPojo(snaps, false) :
+                Lists.newArrayList();
     }
 
     @Override
@@ -48,6 +52,15 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
             delete(entity);
         } else {
             throw new UnauthorizedException("User " + owner + " is not authorized to delete data snap " + id);
+        }
+    }
+
+    @Override
+    public void deleteDataSnaps(@Nonnull String owner) throws UnauthorizedException {
+        List<DataSnapEntity> entities = getDao().findByOwner(owner);
+        for (DataSnapEntity entity : entities) {
+            log.debug("Deleting data snap {}", entity.getLabel());
+            delete(entity);
         }
     }
 
@@ -69,9 +82,12 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
 
     @Nonnull
     @Transient
-    private DataSnap toPojo(@Nonnull final DataSnapEntity entity) {
+    private DataSnap toPojo(@Nonnull final DataSnapEntity entity, Boolean includeFullSnap) {
         try {
-            return entity.getSnap().toBuilder().id(entity.getId()).build();
+            return includeFullSnap ?
+                    entity.getSnap().toBuilder().id(entity.getId()).build() :
+                    DataSnap.builder().label(entity.getLabel())
+                            .description(entity.getDescription()).id(entity.getId()).build();
         } catch (Exception e) {
             throw new RuntimeException("An error occurred trying to convert the data snap to an entity", e);
         }
@@ -79,8 +95,9 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
 
     @Nonnull
     @Transient
-    private List<DataSnap> toPojo(@Nonnull final List<DataSnapEntity> entities) {
-        return (List<DataSnap>) entities.stream().map(this::toPojo).collect(Collectors.toList());
+    private List<DataSnap> toPojo(@Nonnull final List<DataSnapEntity> entities, Boolean includeFullSnap) {
+        return (List<DataSnap>) entities.stream().map(snapEntity -> toPojo(snapEntity, includeFullSnap))
+                .collect(Collectors.toList());
     }
 
 

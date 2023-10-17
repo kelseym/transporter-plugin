@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -61,8 +62,8 @@ public class DefaultTransporterService implements TransporterService {
     }
 
     @Override
-    public Boolean storeDataSnap(@Nonnull UserI user, @Nonnull DataSnap dataSnap) {
-        return dataSnapEntityService.addDataSnap(user.getLogin(), dataSnap) > 0;
+    public Optional<DataSnap> storeDataSnap(@Nonnull UserI user, @Nonnull DataSnap dataSnap) {
+        return Optional.ofNullable(dataSnapEntityService.addDataSnap(user.getLogin(), dataSnap));
     }
 
 
@@ -71,13 +72,20 @@ public class DefaultTransporterService implements TransporterService {
         dataSnapEntityService.deleteDataSnap(user.getLogin(), Long.parseLong(id));
     }
 
+    // TODO: Is this method needed?
     @Override
-    public void mirrorDataSnap(@Nonnull UserI user, @Nonnull String id) throws RuntimeException, IOException {
+    public void deleteDataSnaps(@Nonnull UserI user) throws UnauthorizedException {
+        dataSnapEntityService.deleteDataSnaps(user.getLogin());
+    }
+
+    @Override
+    public Optional<DataSnap> mirrorDataSnap(@Nonnull UserI user, @Nonnull String id) throws RuntimeException, IOException {
         DataSnap dataSnap = getDataSnap(user, id);
         if (dataSnap != null) {
             dataSnapResolutionService.resolveDataSnap(dataSnap);
-            dataSnapResolutionService.mirrorDataSnap(dataSnap);
+            return Optional.ofNullable(dataSnapResolutionService.mirrorDataSnap(dataSnap));
         }
+        return Optional.empty();
     }
 
 

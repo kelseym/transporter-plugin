@@ -13,9 +13,12 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.nrg.framework.orm.hibernate.AbstractHibernateEntity;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
+import org.springframework.context.annotation.Lazy;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Table;
 
 @Entity
@@ -47,6 +50,7 @@ public class DataSnapEntity extends AbstractHibernateEntity {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    @Basic(fetch = FetchType.LAZY)
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb", name = "snap")
     public DataSnap getSnap() { return snap; }

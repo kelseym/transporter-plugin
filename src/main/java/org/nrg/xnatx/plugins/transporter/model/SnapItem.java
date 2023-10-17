@@ -1,6 +1,7 @@
 package org.nrg.xnatx.plugins.transporter.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +20,7 @@ public class SnapItem {
     @Nullable private String id;
     @Nullable private String label;
     @JsonProperty("file-type") private FileType fileType;
-    @Nullable @JsonProperty("xnat-type") private String xnatType;
+    @Nullable @JsonProperty("xnat-type") private XnatType xnatType;
     private String uri;
     @Nullable @JsonProperty("path") private String path;
     @Nullable private List<SnapItem> children;
@@ -39,6 +40,7 @@ public class SnapItem {
         FILE
     }
 
+    @JsonIgnore
     public Stream<SnapItem> flatten() {
         return Stream.concat(
                 Stream.of(this),
@@ -46,4 +48,8 @@ public class SnapItem {
         );
     }
 
+    @JsonIgnore
+    static public Boolean isMirrorable(SnapItem snapItem) {
+        return FileType.FILE.equals(snapItem.getFileType()) && XnatType.FILE.equals(snapItem.getXnatType());
+    }
 }
