@@ -33,18 +33,18 @@ public class DataSnapEntity extends AbstractHibernateEntity {
 
     private static final long serialVersionUID = 1L;
 
-    private String owner;
     private String label;
+    private String owner;
     private String description;
     private DataSnap snap;
+
+    @Column(unique = true, name = "label")
+    public String getLabel() { return label; }
+    public void setLabel(String label) { this.label = label; }
 
     @Column(name = "owner")
     public String getOwner() { return owner; }
     public void setOwner(String owner) { this.owner = owner; }
-
-    @Column(name = "label")
-    public String getLabel() { return label; }
-    public void setLabel(String label) { this.label = label; }
 
     @Column(name = "description")
     public String getDescription() { return description; }
@@ -55,6 +55,5 @@ public class DataSnapEntity extends AbstractHibernateEntity {
     @Column(columnDefinition = "jsonb", name = "snap")
     public DataSnap getSnap() { return snap; }
     public void setSnap(DataSnap dataSnap) { this.snap = dataSnap; }
-
 
 }

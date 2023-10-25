@@ -38,6 +38,12 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
     }
 
     @Override
+    public DataSnap getDataSnap(String owner, String label) throws NotFoundException {
+        DataSnapEntity entity = getDao().getByLabel(label);
+        return owner.equals(entity.getOwner()) ? toPojo(entity, true) : null;
+    }
+
+    @Override
     public List<DataSnap> getDataSnaps(String owner) {
         List<DataSnapEntity> snaps = this.getDao().findByOwner(owner);
         return snaps != null ?
@@ -61,6 +67,17 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
         for (DataSnapEntity entity : entities) {
             log.debug("Deleting data snap {}", entity.getLabel());
             delete(entity);
+        }
+    }
+
+    @Override
+    public void updateDataSnap(String login, DataSnap resolveDataSnap) throws NotFoundException {
+        DataSnapEntity entity = get(resolveDataSnap.getId());
+        if (login.equals(entity.getOwner())) {
+            entity.setLabel(resolveDataSnap.getLabel());
+            entity.setDescription(resolveDataSnap.getDescription());
+            entity.setSnap(resolveDataSnap);
+            update(entity);
         }
     }
 

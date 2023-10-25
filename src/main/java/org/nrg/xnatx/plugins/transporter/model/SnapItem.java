@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -41,15 +42,12 @@ public class SnapItem {
     }
 
     @JsonIgnore
-    public Stream<SnapItem> flatten() {
+    public Stream<SnapItem> flatten(XnatType... xnatTypes) {
         return Stream.concat(
-                Stream.of(this),
-                children == null ? Stream.empty() : children.stream().flatMap(SnapItem::flatten)
+                xnatTypes.length == 0 || Arrays.stream(xnatTypes).anyMatch(xnatType -> xnatType.equals(this.xnatType)) ?
+                        Stream.of(this) : Stream.empty(),
+                children == null ? Stream.empty() : children.stream().flatMap(si-> si.flatten(xnatTypes))
         );
     }
 
-    @JsonIgnore
-    static public Boolean isMirrorable(SnapItem snapItem) {
-        return FileType.FILE.equals(snapItem.getFileType()) && XnatType.FILE.equals(snapItem.getXnatType());
-    }
 }

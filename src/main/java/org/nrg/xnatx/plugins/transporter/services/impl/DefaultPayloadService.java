@@ -1,6 +1,7 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -40,44 +42,45 @@ public class DefaultPayloadService implements PayloadService {
         DataSnap dataSnap = dataSnapEntityService.getDataSnap(username, Long.parseLong(snapId));
         if (dataSnap != null) {
             dataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
-            return createPayload(dataSnap);
+            return createPayload(dataSnap, Payload.Type.DIRECTORY);
         }
         throw new NotFoundException("No data snap found for user " + username + " with id " + snapId);
     }
 
+    // Build a payload object from the DataSnap
     @Override
-    public Payload createPayload(@Nonnull DataSnap dataSnap) throws Exception {
-        try {
-            TransporterPathMapping pathMapping = transporterConfigService.getTransporterPathMapping();
-            return Payload.builder().dataSnapId(dataSnap.getId())
-                    .name(dataSnap.getLabel())
-                    .description(dataSnap.getDescription())
-                    .transporterPathMapping(pathMapping)
-                    .fileManifests(snapItemsToManifest(dataSnap.streamSnapItems()))
-                    .build();
-        } catch (JsonProcessingException e) {
-            throw new Exception("Failed to retrieve path mapping." + e);
+    public Payload createPayload(@Nonnull DataSnap dataSnap, Payload.Type payloadType) throws Exception {
+        return Payload.builder().dataSnapId(dataSnap.getId())
+                .name(dataSnap.getLabel())
+                .description(dataSnap.getDescription())
+                .type(payloadType)
+                .fileManifests(payloadType.equals(Payload.Type.FILES) ?
+                            snapItemsToManifest(dataSnap.streamSnapItems()) :
+                            dataSnapToDirectoryManifest(dataSnap))
+                .build();
+    }
+
+    private List<Payload.FileManifest> dataSnapToDirectoryManifest(DataSnap dataSnap) {
+        if (dataSnap.getBuildState().equals(DataSnap.BuildState.MIRRORED)) {
+            return Arrays.asList(Payload.FileManifest.builder()
+                    .path(dataSnap.getRootPath())
+                    .build());
+        } else {
+            throw new UnsupportedOperationException("Data must be mirrored before it can be transported via directory mount.");
         }
     }
 
     private List<Payload.FileManifest> snapItemsToManifest(Stream<SnapItem> snapItems) {
         //TODO: Implement conversion from SnapItem to FileManifest
         // Include only 'FILE' type SnapItems
-
+        throw new UnsupportedOperationException("Not yet implemented");
         //return snapItems.map(snapItem -> Payload.FileManifest.builder()
         //        .xnatUri(snapItem.getUri())
         //        .serverPath(snapItem.getPath())
         //        .snapshotPath(snapItem.getSnapshotPath())
         //        .build()).forEach(fileManifest -> log.debug("File manifest: " + fileManifest.toString())
-                return null;
+
     }
 
-//    private Payload.FileManifest snapItemToManifest(SnapItem snapItem) {
-//        return Payload.FileManifest.builder()
-//                .xnatUri(snapItem.getUri())
-//                .serverPath(snapItem.getPath())
-//                .snapshotPath(snapItem.getSnapshotPath())
-//                .build();
-//    }
 
 }

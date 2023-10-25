@@ -4,6 +4,7 @@ import sys
 import xnat
 import requests
 import re
+import datetime
 
 def generate_snap_item(subject_or_experiment_or_scan):
     item = {
@@ -31,7 +32,9 @@ def generate_snap_item(subject_or_experiment_or_scan):
         item["xnat-type"] = "RESOURCE"
         # Replace the trailing ID in this resources uri with its label
         item["uri"] = re.sub(r'(\d+)$', item['label'], item["uri"])
-        for file in subject_or_experiment_or_scan.files.values():
+        for index, file in enumerate(subject_or_experiment_or_scan.files.values()):
+            if index >= 10:
+                break
             item["children"].append({
                 "id": file.id if hasattr(file, 'id') else "",
                 "label": file.id if hasattr(file, 'label') else "",
@@ -52,7 +55,7 @@ if __name__ == "__main__":
     project_id = sys.argv[1]
 
     # Get environment variables
-    datasnap_name = os.environ.get('DATASNAP_NAME', 'DefaultName')
+    datasnap_name = os.environ.get('DATASNAP_NAME', 'DefaultName' + datetime.datetime.now().strftime('%m-%d-%H:%M:%S'))
     datasnap_desc = os.environ.get('DATASNAP_DESC', 'DefaultDescription')
     xnat_host = os.environ.get('XNAT_HOST', 'http://localhost')
     xnat_user = os.environ.get('XNAT_USER', 'admin')
@@ -65,6 +68,7 @@ if __name__ == "__main__":
         datasnap = {
             "label": datasnap_name,
             "description": datasnap_desc,
+            "root-id": project_id,
             "content": [generate_snap_item(subject) for subject in project.subjects.values()]
         }
 

@@ -6,8 +6,11 @@ import org.nrg.xft.security.UserI;
 import org.nrg.xnat.services.archive.CatalogService;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
+import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
+import org.nrg.xnatx.plugins.transporter.services.PayloadService;
+import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,22 +20,30 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static org.nrg.xnatx.plugins.transporter.model.DataSnap.BuildState.*;
+
 @Slf4j
 @Service
 public class DefaultTransporterService implements TransporterService {
 
-    private DataSnapResolutionService dataSnapResolutionService;
-    private DataSnapEntityService dataSnapEntityService;
+    private final DataSnapResolutionService dataSnapResolutionService;
+    private final DataSnapEntityService dataSnapEntityService;
     private final CatalogService catalogService;
+    private final TransporterConfigService transporterConfigService;
+    private final PayloadService payloadService;
 
 
     @Autowired
-    public DefaultTransporterService(DataSnapResolutionService dataSnapResolutionService,
-                                     DataSnapEntityService dataSnapEntityService,
-                                     final CatalogService catalogService) {
+    public DefaultTransporterService(final DataSnapResolutionService dataSnapResolutionService,
+                                     final DataSnapEntityService dataSnapEntityService,
+                                     final CatalogService catalogService,
+                                     final TransporterConfigService transporterConfigService,
+                                     final PayloadService payloadService) {
         this.dataSnapResolutionService = dataSnapResolutionService;
         this.dataSnapEntityService = dataSnapEntityService;
         this.catalogService = catalogService;
+        this.transporterConfigService = transporterConfigService;
+        this.payloadService = payloadService;
     }
 
 
@@ -51,19 +62,43 @@ public class DefaultTransporterService implements TransporterService {
             return null;
         }
     }
+    @Override
+    public DataSnap getDataSnapByLabel(UserI user, String label) {
+
+        try {
+            return dataSnapEntityService.getDataSnap(user.getLogin(), label);
+        } catch (NotFoundException e) {
+            return null;
+        }
+    }
 
     @Override
     public DataSnap getResolvedDataSnap(UserI user, String id) throws RuntimeException {
         DataSnap dataSnap = getDataSnap(user, id);
-        if (dataSnap != null) {
-            return dataSnapResolutionService.resolveDataSnap(dataSnap);
-        }
+        try {
+            if (dataSnap != null) {
+                switch (dataSnap.getBuildState()) {
+                    case CREATED:
+                        DataSnap resolveDataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
+                        dataSnapEntityService.updateDataSnap(user.getLogin(), resolveDataSnap);
+                    case RESOLVED:
+                    case MIRRORED:
+                        return dataSnap;
+                    default:
+                        throw new RuntimeException("Data snap " + dataSnap.getId() + " has an invalid build state: " + dataSnap.getBuildState());
+                }
+            }
+            } catch (NotFoundException e) {
+                throw new RuntimeException(e);
+            }
         return null;
     }
 
     @Override
     public Optional<DataSnap> storeDataSnap(@Nonnull UserI user, @Nonnull DataSnap dataSnap) {
-        return Optional.ofNullable(dataSnapEntityService.addDataSnap(user.getLogin(), dataSnap));
+        return Optional.ofNullable(dataSnapEntityService
+                .addDataSnap(user.getLogin(),
+                        dataSnap.toBuilder().buildState(CREATED).build()));
     }
 
 
@@ -79,15 +114,40 @@ public class DefaultTransporterService implements TransporterService {
     }
 
     @Override
-    public Optional<DataSnap> mirrorDataSnap(@Nonnull UserI user, @Nonnull String id) throws RuntimeException, IOException {
+    public DataSnap mirrorDataSnap(@Nonnull UserI user, @Nonnull String id) throws Exception {
         DataSnap dataSnap = getDataSnap(user, id);
         if (dataSnap != null) {
-            dataSnapResolutionService.resolveDataSnap(dataSnap);
-            return Optional.ofNullable(dataSnapResolutionService.mirrorDataSnap(dataSnap));
+            switch (dataSnap.getBuildState()) {
+                case CREATED:
+                    dataSnap = getResolvedDataSnap(user, id);
+                case RESOLVED:
+                    dataSnap = dataSnapResolutionService.mirrorDataSnap(dataSnap);
+                case MIRRORED:
+                    return dataSnap;
+                default:
+                    throw new RuntimeException("Data snap " + dataSnap.getId() + " has an invalid build state: " + dataSnap.getBuildState());
+            }
         }
-        return Optional.empty();
+        return null;
     }
 
+    @Override
+    public DataSnap getRemappedDataSnap(DataSnap dataSnap) throws RuntimeException {
+        try {
+            return dataSnapResolutionService.getRemappedDataSnap(dataSnap, transporterConfigService.getTransporterPathMapping());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    @Override
+    public Payload createPayload(UserI user, String label) throws Exception {
+        DataSnap dataSnap = getDataSnapByLabel(user, label);
+        dataSnap = mirrorDataSnap(user, Long.toString(dataSnap.getId()));
+        return payloadService.createPayload(
+                transporterConfigService.getTransporterPathMapping().isRemapped()
+                ? getRemappedDataSnap(dataSnap) : dataSnap,
+                Payload.Type.DIRECTORY);
+    }
 
 }

@@ -19,8 +19,10 @@ import org.nrg.xnat.services.archive.CatalogService;
 import org.nrg.xnat.utils.CatalogUtils;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.SnapItem;
+import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
+import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,9 +35,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.nrg.xnatx.plugins.transporter.model.DataSnap.BuildState.MIRRORED;
+import static org.nrg.xnatx.plugins.transporter.model.DataSnap.BuildState.RESOLVED;
 
 @Slf4j
 @Service
@@ -46,26 +53,32 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
     private final DataSnapEntityService dataSnapEntityService;
     private final CatalogService catalogService;
     private final SiteConfigPreferences siteConfigPreferences;
+    private final TransporterConfigService transporterConfigService;
 
 
     @Autowired
     public DefaultDataSnapResolutionService(final DataSnapEntityService dataSnapEntityService,
                                             final CatalogService catalogService,
-                                            final SiteConfigPreferences siteConfigPreferences) {
+                                            final SiteConfigPreferences siteConfigPreferences,
+                                            final TransporterConfigService transporterConfigService) {
         this.dataSnapEntityService = dataSnapEntityService;
         this.catalogService = catalogService;
         this.siteConfigPreferences = siteConfigPreferences;
+        this.transporterConfigService = transporterConfigService;
     }
 
     @Override
-    public DataSnap mirrorDataSnap(@Nonnull DataSnap dataSnap) throws RuntimeException, IOException {
+    public DataSnap mirrorDataSnap(@Nonnull DataSnap dataSnap) throws Exception {
         return mirrorDataSnap(dataSnap, getSnapshotDirectory());
     }
 
-    private DataSnap mirrorDataSnap(@Nonnull DataSnap dataSnap, @Nonnull Path targetPath) throws RuntimeException {
+    private DataSnap mirrorDataSnap(@Nonnull DataSnap dataSnap, @Nonnull Path targetPath) throws Exception {
         // Iterate over each SnapItem and mirror the file/directory to the target directory
-        Path originalRootPath = Paths.get(dataSnap.getRootPath());
-        dataSnap.streamSnapItems().filter(SnapItem::isMirrorable).forEach(snapItem -> {
+        Path originalRootPath = Paths.get(
+                Strings.isNullOrEmpty(dataSnap.getRootPath()) ?
+                        Paths.get("/").toString() : dataSnap.getRootPath());
+        TransporterPathMapping transporterPathMapping = transporterConfigService.getTransporterPathMapping();
+        dataSnap.streamSnapItems(SnapItem.XnatType.FILE).forEach(snapItem -> {
             try {
                 Path sourcePath = originalRootPath.resolve(snapItem.getPath());
                 Path destinationPath = targetPath.resolve(snapItem.getPath());
@@ -75,7 +88,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                 else {
                     Files.createDirectories(destinationPath.getParent());
                     if (Files.isRegularFile(sourcePath)) {
-                        Files.createSymbolicLink(destinationPath, sourcePath);
+                        Files.createSymbolicLink(remapRootDirectory(transporterPathMapping, destinationPath), sourcePath);
                     }
                 }
             } catch (UncheckedIOException | IOException e) {
@@ -83,9 +96,17 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
             }
         });
         dataSnap.setRootPath(targetPath.toString());
+        dataSnap.setBuildState(MIRRORED);
         return dataSnap;
     }
 
+    private Path remapRootDirectory(TransporterPathMapping transporterPathMapping, Path originalPath) {
+        if (!transporterPathMapping.isRemapped())
+            return originalPath;
+        Path originalRoot = Paths.get(transporterPathMapping.getXnatRootPath());
+        Path relativePath = originalRoot.relativize(originalPath);
+        return Paths.get(transporterPathMapping.getServerRootPath()).resolve(relativePath);
+    }
 
     @Override
     public void validateDataSnap(DataSnap dataSnap, Boolean expectResolved) throws ValidationException {
@@ -116,17 +137,45 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
     public DataSnap resolveDataSnap(DataSnap dataSnap) throws RuntimeException {
         dataSnap.streamSnapItems().forEach(this::resolveHostPath);
         Optional<String> rootPath = findCommonRoot(dataSnap.streamSnapItems().map(SnapItem::getPath));
-        if (rootPath.isPresent()){
-            dataSnap.setRootPath(rootPath.get());
-            Path root = Paths.get(rootPath.toString());
-            dataSnap.streamSnapItems().forEach(si -> si.setPath(root.relativize(Paths.get(si.getPath())).toString()));
+        try {
+            if (rootPath.isPresent()){
+                dataSnap.setRootPath(rootPath.get());
+                Path root = Paths.get(rootPath.get());
+                // TODO: Why doesn't the "stream version" work?
+                //dataSnap.streamSnapItems()
+                //        .filter(Objects::nonNull)
+                //        .filter(si -> !Strings.isNullOrEmpty(si.getPath()))
+                //        .forEach(si -> si.setPath(root.relativize(Paths.get(si.getPath())).toString()));
+                for (SnapItem snapItem: dataSnap.streamSnapItems()
+                        .filter(Objects::nonNull)
+                        .filter(si -> !Strings.isNullOrEmpty(si.getPath())).collect(Collectors.toList())) {
+                    Path path = Paths.get(snapItem.getPath());
+                    Path relPath = root.relativize(path);
+                    snapItem.setPath(relPath.toString());
+                }
+                dataSnap.setRootPath(rootPath.get());
+            }
+        } catch (Throwable e) {
+            log.error("Error resolving data snap", e.getMessage());
         }
+        dataSnap.setBuildState(RESOLVED);
         return dataSnap;
+    }
+
+    @Override
+    public DataSnap getRemappedDataSnap(DataSnap dataSnap, TransporterPathMapping transporterPathMapping) {
+        if (dataSnap.getBuildState().equals(MIRRORED) ||
+                dataSnap.getBuildState().equals(RESOLVED)) {
+            remapDataSnap(dataSnap, transporterPathMapping);
+            return dataSnap;
+        } else {
+            throw new RuntimeException("DataSnap must be in MIRRORED or RESOLVED state to remap.");
+        }
     }
 
     private void resolveHostPath(@Nonnull SnapItem item) throws RuntimeException{
         log.info("Resolving host path for item: " + item.getLabel());
-        if (SnapItem.XnatType.RESOURCE.name().equals(item.getXnatType())) {
+        if (SnapItem.XnatType.RESOURCE.equals(item.getXnatType())) {
             try {
                 ResourceData resourceData = catalogService
                         .getResourceDataFromUri(item.getUri().replace("/data/","/archive/"), true);
@@ -153,7 +202,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                     Long size = sizeStr == null ? null : Long.parseLong(sizeStr);
                     String checksum = (String) entry[8];
                     item.getChildren().stream().
-                            filter(f -> SnapItem.XnatType.FILE.name().equals(f.getXnatType())).
+                            filter(f -> SnapItem.XnatType.FILE.equals(f.getXnatType())).
                             filter(f -> f.getId().equals(relPath)).
                             forEach(f -> f.setPath(filePath));
                 }
@@ -165,7 +214,9 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
     }
 
     private static Optional<String> findCommonRoot(Stream<String> paths) {
-        return paths.map(Paths::get)
+        return paths
+                .filter(Objects::nonNull)
+                .map(Paths::get)
                 .reduce(DefaultDataSnapResolutionService::getCommonPath)
                 .map(Path::toString);
     }
@@ -179,7 +230,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
             }
         }
 
-        return path1.subpath(0, len);
+        return Paths.get(path1.getRoot().toString(), path1.subpath(0, len).toString());
     }
 
     // TODO: Define a unique directory (in xdat) to store snapshots, e.g. /data/xnat/snapshots
@@ -196,6 +247,18 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
         }
         created.toFile().setWritable(true);
         return created;
+    }
+
+    private void remapDataSnap(DataSnap dataSnap, TransporterPathMapping transporterPathMapping) {
+        String snapRootPath = dataSnap.getRootPath();
+        String serverRootPath = transporterPathMapping.getServerRootPath();
+        String xnatRootPath = transporterPathMapping.getXnatRootPath();
+        // Validate that xnatServerPath is a substring in snapRootPath
+        if (!snapRootPath.startsWith(xnatRootPath)) {
+            throw new IllegalArgumentException("xnatRootPath is not a substring in snapRootPath. Check for valid path mapping.");
+        }
+        String remappedRootPath = snapRootPath.replace(Paths.get(xnatRootPath).toString(), Paths.get(serverRootPath).toString());
+        dataSnap.setRootPath(remappedRootPath);
     }
 
 }

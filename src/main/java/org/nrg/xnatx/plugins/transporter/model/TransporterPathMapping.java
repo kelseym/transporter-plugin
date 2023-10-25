@@ -1,5 +1,7 @@
 package org.nrg.xnatx.plugins.transporter.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +24,13 @@ public class TransporterPathMapping {
                 .xnatRootPath(DEFAULT_XNAT_ROOT_PATH)
                 .serverRootPath(DEFAULT_HOST_ROOT_PATH)
                 .build();
+    }
+
+    @JsonIgnore
+    public Boolean isRemapped() {
+        return Strings.isNullOrEmpty(xnatRootPath) || Strings.isNullOrEmpty(serverRootPath) ?
+                false :
+                !xnatRootPath.equals(serverRootPath);
     }
 
 }

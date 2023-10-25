@@ -9,8 +9,8 @@ import java.util.List;
 @Repository
 public class DataSnapEntityDao extends AbstractHibernateDAO<DataSnapEntity> {
 
-    public DataSnapEntity getByName(String name) {
-        return findByUniqueProperty("name", name);
+    public DataSnapEntity getByLabel(String name) {
+        return findByUniqueProperty("label", name);
     }
 
     public List<DataSnapEntity> findByOwner(String owner) {

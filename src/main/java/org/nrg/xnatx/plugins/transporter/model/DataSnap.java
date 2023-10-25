@@ -7,7 +7,6 @@ import io.swagger.annotations.ApiModel;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import springfox.documentation.spring.web.paths.Paths;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -24,15 +23,37 @@ import java.util.stream.Stream;
 
 public class DataSnap {
 
-    @Nullable private Long id;
+    @Nullable
+    private Long id;
     private String label;
-    @Nullable private String description;
+    @Nullable
+    private String description;
+    @JsonProperty(value = "root-path")
     private String rootPath;
+    @Nullable
+    @JsonProperty("rood-id")
+    private String rootId;
+    @JsonProperty("build-state")
+    private BuildState buildState;
+    @Nullable
     private List<SnapItem> content;
 
+    public enum BuildState {
+        CREATED,
+        RESOLVED,
+        MIRRORED,
+        FAILED
+    }
+
+    //// TODO: Support filtering by item type, e.g. stream only resources, etc.
+    //@JsonIgnore
+    //public Stream<SnapItem> streamSnapItems() {
+    //    return content.stream().flatMap(SnapItem::flatten);
+    //}
+
     @JsonIgnore
-    public Stream<SnapItem> streamSnapItems() {
-        return content.stream().flatMap(SnapItem::flatten);
+    public Stream<SnapItem> streamSnapItems(SnapItem.XnatType... xnatTypes) {
+        return content.stream().flatMap(si -> si.flatten(xnatTypes));
     }
 
     @JsonIgnore

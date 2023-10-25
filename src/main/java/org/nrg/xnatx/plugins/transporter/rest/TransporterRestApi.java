@@ -18,6 +18,7 @@ import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
+import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
 import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterService;
@@ -81,7 +82,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
 
     // REST Endpoint to GET a particular snapshot for a given user
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}"}, method = GET)
-    @ApiOperation(value = "Get available snapshots.")
+    @ApiOperation(value = "Get snapshot by id.")
     @ResponseBody
     public DataSnap getSnap(final @PathVariable String id,
                             @RequestParam(required = false, defaultValue = "false") boolean resolved) {
@@ -107,9 +108,17 @@ public class TransporterRestApi extends AbstractXapiRestController {
             return ResponseEntity.noContent().build();
         }
         throw new UnauthorizedException("Verification required to delete all snapshots.");
-
     }
 
+    // REST Endpoint to GET payload by label for a given user
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/payload/{label}/"}, method = GET)
+    @ApiOperation(value = "Get payload by label.")
+    @ResponseBody
+    public ResponseEntity<Payload> getPayloadByLabel(final @PathVariable(required = true) String label)
+            throws Exception {
+
+        return ResponseEntity.ok(transporterService.createPayload(getUser(), label));
+    }
 
     // REST Endpoint to set transporter path mapping
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)
@@ -131,7 +140,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/mirror/{id}"}, method = POST)
     @ApiOperation(value = "Mirror snapshot data.")
     public ResponseEntity mirror(final @PathVariable String id)
-            throws NotFoundException, RuntimeException, UnauthorizedException, IOException {
+            throws Exception {
         transporterService.mirrorDataSnap(getUser(), id);
         return ResponseEntity.ok().build();
     }

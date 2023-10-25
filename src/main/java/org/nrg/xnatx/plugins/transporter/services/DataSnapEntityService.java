@@ -12,9 +12,13 @@ public interface DataSnapEntityService {
 
     DataSnap getDataSnap(String owner, Long id) throws NotFoundException;
 
+    DataSnap getDataSnap(String owner, String label) throws NotFoundException;
+
     List<DataSnap> getDataSnaps(String owner);
 
     void deleteDataSnap(String login, Long id) throws NotFoundException, UnauthorizedException;
 
     void deleteDataSnaps(@Nonnull String owner) throws UnauthorizedException;
+
+    void updateDataSnap(String login, DataSnap resolveDataSnap) throws NotFoundException;
 }

@@ -19,7 +19,12 @@ public class Payload {
     private String name;
     private String description;
     private List<FileManifest> fileManifests;
-    private TransporterPathMapping transporterPathMapping;
+    private Type type;
+
+    public enum Type {
+        FILES,
+        DIRECTORY
+    }
 
     @Data
     @Builder
@@ -27,9 +32,7 @@ public class Payload {
     @AllArgsConstructor
     public static class FileManifest {
         private String xnatUri;
-        private String serverPath;
-        private String snapshotPath;
+        private String path;
     }
-
 
 }
