@@ -16,7 +16,7 @@ public class Payload {
 
     private Long id;
     private Long dataSnapId;
-    private String name;
+    private String label;
     private String description;
     private List<FileManifest> fileManifests;
     private Type type;

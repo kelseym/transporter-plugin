@@ -31,4 +31,6 @@ public interface TransporterService {
     DataSnap getRemappedDataSnap(DataSnap dataSnap) throws RuntimeException;
 
     Payload createPayload(UserI user, String label) throws Exception;
+
+    List<Payload> createPayloads(UserI user);
 }

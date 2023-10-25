@@ -178,7 +178,10 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
         if (SnapItem.XnatType.RESOURCE.equals(item.getXnatType())) {
             try {
                 ResourceData resourceData = catalogService
-                        .getResourceDataFromUri(item.getUri().replace("/data/","/archive/"), true);
+                        .getResourceDataFromUri(item.getUri()
+                                .replace("/data/","/archive/").
+                                replace("/archive/archive/", "/archive/"), // TODO: Fix this hack
+                                true);
                 final URIManager.ArchiveItemURI resourceUri = resourceData.getXnatUri();
                 final XnatAbstractresourceI xnatAbstractresourceI = ((ResourceURII)resourceUri).getXnatResource();
                 final XnatResourcecatalog xnatResourcecatalog = (XnatResourcecatalog) xnatAbstractresourceI;

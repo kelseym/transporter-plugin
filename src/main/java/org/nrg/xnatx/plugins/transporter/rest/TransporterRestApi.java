@@ -62,7 +62,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     }
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/datasnap"}, method = POST, consumes = JSON)
-    @ApiOperation(value = "Accepts and processes the DataSnap payload.")
+    @ApiOperation(value = "Accepts and processes a DataSnap.")
     public ResponseEntity<String> postSnap(final @RequestBody DataSnap dataSnap) {
         Optional<DataSnap> result = transporterService.storeDataSnap(getUser(), dataSnap);
         if (result.isPresent()) {
@@ -118,6 +118,16 @@ public class TransporterRestApi extends AbstractXapiRestController {
             throws Exception {
 
         return ResponseEntity.ok(transporterService.createPayload(getUser(), label));
+    }
+
+    // REST Endpoint to GET all payload labels for a given user
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/payloads/"}, method = GET)
+    @ApiOperation(value = "Get payload summaries by user.")
+    @ResponseBody
+    public ResponseEntity<List<Payload>> getPayloads()
+            throws Exception {
+
+        return ResponseEntity.ok(transporterService.createPayloads(getUser()));
     }
 
     // REST Endpoint to set transporter path mapping

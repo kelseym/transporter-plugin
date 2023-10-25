@@ -150,4 +150,10 @@ public class DefaultTransporterService implements TransporterService {
                 Payload.Type.DIRECTORY);
     }
 
+    @Override
+    public List<Payload> createPayloads(UserI user) {
+        List<DataSnap> dataSnaps = getDataSnaps(user);
+        return payloadService.createPayloads(dataSnaps);
+    }
+
 }
