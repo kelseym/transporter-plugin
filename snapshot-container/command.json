@@ -2,19 +2,13 @@
     "name": "DataSnap",
     "description": "Create a DataSnap manifest.",
     "label": "DataSnap",
-    "version": "1.0",
+    "version": "0.1",
     "schema-version": "1.0",
     "image": "python:python:3.11-slim",
     "type": "docker",
-    "command-line": "datasnap.py /input",
+    "command-line": "datasnap.py #PROJECT_ID#",
     "override-entrypoint": true,
-    "mounts": [
-        {
-            "name": "input",
-            "writable": true,
-            "path": "/input"
-        }
-    ],
+    "mounts": [],
     "environment-variables": {
         "PROJECT_ID": "#PROJECT_ID#",
         "DATASNAP_NAME": "#DATASNAP_NAME#",
@@ -49,27 +43,18 @@
     "xnat": [
         {
             "name": "DataSnap Project",
-            "description": "",
+            "description": "Create a snapshot manifest using all project files.",
             "label": "datasnap-project",
-            "contexts": ["xnat:ProjectData"],
+            "contexts": ["xnat:projectData"],
             "external-inputs": [
                 {
                     "name": "project",
                     "description": "",
                     "type": "Project",
-                    "provides-files-for-command-mount": "input",
                     "load-children": false
                 }
             ],
             "derived-inputs": [
-                {
-                    "name": "project",
-                    "type": "Project",
-                    "required": true,
-                    "user-settable": false,
-                    "load-children": true,
-                    "derived-from-wrapper-input": "session"
-                },
                 {
                     "name": "project-id",
                     "type": "string",

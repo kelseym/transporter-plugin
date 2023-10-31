@@ -79,11 +79,8 @@ public class TransporterRestApi extends AbstractXapiRestController {
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}"}, method = GET)
     @ApiOperation(value = "Get snapshot by id.")
     @ResponseBody
-    public DataSnap getSnap(final @PathVariable String id,
-                            @RequestParam(required = false, defaultValue = "false") boolean resolved) {
-        return resolved ?
-                transporterService.getResolvedDataSnap(getUser(), id) :
-                transporterService.getDataSnap(getUser(), id);
+    public DataSnap getSnap(final @PathVariable String id) {
+        return transporterService.getDataSnap(getUser(), id);
     }
 
     // REST Endpoint to DELETE a particular snapshot for a given user

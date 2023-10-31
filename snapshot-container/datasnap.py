@@ -68,7 +68,7 @@ if __name__ == "__main__":
         datasnap = {
             "label": datasnap_name,
             "description": datasnap_desc,
-            "root-id": project_id,
+            "path-root-key": project_id,
             "content": [generate_snap_item(subject) for subject in project.subjects.values()]
         }
 
@@ -85,6 +85,6 @@ if __name__ == "__main__":
 
     # Check the response
     if response.status_code == 200:
-        print("Data successfully posted!")
+        print(f"Data successfully posted! - {response.text}")
     else:
         print(f"Error occurred: {response.status_code} - {response.text}")

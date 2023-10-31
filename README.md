@@ -1,42 +1,27 @@
-# XNAT Plugin 103 Example
+# XNAT Transporter Plugin
+ 
 
-Welcome to the XNAT Plugin 103 Example.
-This example builds on the Plugin 101 example and adds:
-* A custom page that can be served up in the UI, at {SITE_ROOT}/app/template/Page.vm?view=unicorn/example
-* How to add a link to the Project Actions box that sends a project-specific link to that page
+The XNAT Transporter supports the creation of Data Snapshots and the transport of those snapshots to a remote host/client by way of the SCP protocol.
 
-## Review the Source Code
-### build.gradle
-These are items to notice
-* This plugin is built on XNAT version 1.8.6
-* The version of this plugin is 0.1.0
+Transporter functionality is implemented across two components: the [XNAT Plugin](https://github.com/kelseym/transporter-plugin) and the [Transporter App](https://github.com/kelseym/transporter-app
+).
+
+![Transporter](https://drive.google.com/uc?id=1jQ01d_IpH4SPsQsTrAaDmZbfAF5J6PMi)
+
+Snapshot creation is currently supported via [python script](https://github.com/kelseym/transporter-plugin/tree/main/snapshot-container) and the Docker container (`xnat/data-snapshot:0.1`).
+
+## Alpha Version Plugin 
+* This plugin is built on XNAT version 1.8.9.1
+* This plugin is in Alpha release and is subject to breaking changes without notice.
 * Building the plugin relies on Maven Central as well as a Maven repository hosted by the XNAT team
-* A small number of values are computed and go into the jar manifest. Other examples will fill this out further.
 
-### settings.gradle
-This file contains the name of the root project. In this case: xnat-plugin-101
 
-### src/main/java/org/unicorn/xnatx/plugin/Plugin103.java
-This is the java file with the plugin code. Please note:
-* The XnatPlugin annotation
-    - Declares this is a plugin with an identifier (value) and name (text)
-* The constructor logs some simple messages at ERROR level including a stack trace.
+## Build and install the plugin
+1. Run `./gradlew clean jar` in the transporter-plugin folder. 
+2. Copy build/libs/xnat-transporter-plugin-0.1.0.jar to the XNAT plugins folder
+3. Stop and start tomcat
 
-## Build The Example
-In this the 103folder, clean and build the plugin jar
-    ./gradlew clean xnatPluginJar
-Examine jar that is created; look at the text files in the jar.
-    cp build/libs/xnat-plugin-103-0.1.0.jar /tmp
-    mkdir /tmp/x
-    pushd /tmp/x
-    jar xf ../xnat-plugin-101-0.1.0.jar
-    find . -type f
 
-## Install the Plugin
-1. Copy build/libs/xnat-plugin-103.0.1.0.jar to the XNAT plugins folder
-2. Stop and start tomcat
-3. Examine the log output in the XNAT logs folder (logs/plugin-101.log). You should see one log message announcing that XNAT is creating the Plugin101 configuration class
-4. Log in to your XNAT as an administrator and look for the plugin
-4.1. Select Administer --> Site Administration
-4.2 Look in the left flap and select Installed Plugins
-4.3 View the information concerning the 101 plugin
+## Transporter Usage
+
+`scp -P 2222 -rp -O  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null username@host_url:snapshot_lable /destination/folder`

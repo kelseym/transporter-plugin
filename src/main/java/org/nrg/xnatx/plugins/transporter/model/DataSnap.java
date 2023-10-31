@@ -31,8 +31,8 @@ public class DataSnap {
     @JsonProperty(value = "root-path")
     private String rootPath;
     @Nullable
-    @JsonProperty("rood-id")
-    private String rootId;
+    @JsonProperty("path-root-key")
+    private String pathRootKey;
     @JsonProperty("build-state")
     private BuildState buildState;
     @Nullable

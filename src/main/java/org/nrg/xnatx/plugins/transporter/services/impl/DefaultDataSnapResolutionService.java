@@ -136,11 +136,12 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
     @Override
     public DataSnap resolveDataSnap(DataSnap dataSnap) throws RuntimeException {
         dataSnap.streamSnapItems().forEach(this::resolveHostPath);
-        Optional<String> rootPath = findCommonRoot(dataSnap.streamSnapItems().map(SnapItem::getPath));
+        Optional<String> commonRoot = Strings.isNullOrEmpty(dataSnap.getPathRootKey()) ?
+                findCommonRoot(dataSnap.streamSnapItems().map(SnapItem::getPath)) :
+                findKeyedRoot(findCommonRoot(dataSnap.streamSnapItems().map(SnapItem::getPath)), dataSnap.getPathRootKey());
         try {
-            if (rootPath.isPresent()){
-                dataSnap.setRootPath(rootPath.get());
-                Path root = Paths.get(rootPath.get());
+            if (commonRoot.isPresent()){
+                Path root = Paths.get(commonRoot.get());
                 // TODO: Why doesn't the "stream version" work?
                 //dataSnap.streamSnapItems()
                 //        .filter(Objects::nonNull)
@@ -153,7 +154,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                     Path relPath = root.relativize(path);
                     snapItem.setPath(relPath.toString());
                 }
-                dataSnap.setRootPath(rootPath.get());
+                dataSnap.setRootPath(commonRoot.get());
             }
         } catch (Throwable e) {
             log.error("Error resolving data snap", e.getMessage());
@@ -229,11 +230,26 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
         Path common = path1.getRoot();
         for (int i = 0; i < len; i++) {
             if (!path1.getName(i).equals(path2.getName(i))) {
-                return path1.subpath(0, i);
+                return path1.isAbsolute() ?
+                        Paths.get(path1.getRoot().toString(), path1.subpath(0, i).toString()) :
+                        path1.subpath(0, i);
             }
         }
 
         return Paths.get(path1.getRoot().toString(), path1.subpath(0, len).toString());
+    }
+
+    private static Optional<String> findKeyedRoot(final Optional<String> commonRoot, final String rootKey) {
+        if (commonRoot.isPresent() && !Strings.isNullOrEmpty(rootKey)) {
+            int keyIndex = commonRoot.get().indexOf(rootKey);
+            if (keyIndex == -1) {
+                return commonRoot;
+            } else {
+                return Optional.of(commonRoot.get().substring(0, keyIndex));
+            }
+        } else {
+            return Optional.empty();
+        }
     }
 
     // TODO: Define a unique directory (in xdat) to store snapshots, e.g. /data/xnat/snapshots
