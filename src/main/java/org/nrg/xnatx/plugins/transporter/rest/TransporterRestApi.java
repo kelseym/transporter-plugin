@@ -1,7 +1,6 @@
 package org.nrg.xnatx.plugins.transporter.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import io.swagger.annotations.*;
 import org.nrg.config.exceptions.ConfigServiceException;
@@ -11,8 +10,6 @@ import org.nrg.xapi.rest.AbstractXapiRestController;
 import org.nrg.xapi.rest.XapiRequestMapping;
 import org.nrg.xdat.XDAT;
 import org.nrg.xdat.security.helpers.AccessLevel;
-import org.nrg.xdat.security.services.RoleHolder;
-import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xdat.security.services.RoleHolder;
 import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xft.security.UserI;
@@ -32,10 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.web.bind.annotation.RequestMethod.*;
@@ -63,8 +57,9 @@ public class TransporterRestApi extends AbstractXapiRestController {
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/datasnap"}, method = POST, consumes = JSON)
     @ApiOperation(value = "Accepts and processes a DataSnap.")
-    public ResponseEntity<String> postSnap(final @RequestBody DataSnap dataSnap) {
-        Optional<DataSnap> result = transporterService.storeDataSnap(getUser(), dataSnap);
+    public ResponseEntity<String> postSnap(final @RequestBody DataSnap dataSnap,
+                                           @RequestParam(required = false, defaultValue = "true") boolean resolve) throws Exception {
+        Optional<DataSnap> result = transporterService.storeDataSnap(getUser(), dataSnap, resolve);
         if (result.isPresent()) {
             return ResponseEntity.ok("DataSnap " + result.get().getLabel() + " successfully received and processed!");
         } else {
@@ -102,7 +97,8 @@ public class TransporterRestApi extends AbstractXapiRestController {
     // REST Endpoint to DELETE all snapshots for a given user
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnaps"}, method = DELETE)
     @ApiOperation(value = "Delete all snapshots for user.")
-    public ResponseEntity<Void> delete(final @RequestParam(required = false, defaultValue = "false") boolean verify) throws UnauthorizedException {
+    public ResponseEntity<Void> delete(final @RequestParam(required = false, defaultValue = "false") boolean verify)
+            throws UnauthorizedException {
         if (verify) {
             transporterService.deleteDataSnaps(getUser());
             return ResponseEntity.noContent().build();
@@ -111,7 +107,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     }
 
     // REST Endpoint to GET payload by label for a given user
-    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/payload/{label}/"}, method = GET)
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/payload/{label}"}, method = GET)
     @ApiOperation(value = "Get payload by label.")
     @ResponseBody
     public ResponseEntity<Payload> getPayloadByLabel(final @PathVariable(required = true) String label)
@@ -121,20 +117,22 @@ public class TransporterRestApi extends AbstractXapiRestController {
     }
 
     // REST Endpoint to GET all payload labels for a given user
-    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/payloads/"}, method = GET)
-    @ApiOperation(value = "Get payload summaries by user.")
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/payloads"}, method = GET)
+    @ApiOperation(value = "Get payload summaries by user. Available payloads correspond to mirrored snapshots.")
     @ResponseBody
     public ResponseEntity<List<Payload>> getPayloads()
             throws Exception {
 
-        return ResponseEntity.ok(transporterService.createPayloads(getUser()));
+        return ResponseEntity.ok(transporterService.getAvailablePayloads(getUser()));
     }
 
     // REST Endpoint to set transporter path mapping
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)
     @ApiOperation(value = "Set transporter path mapping.")
-    public ResponseEntity setMapping(@RequestParam final String xnatRootPath, @RequestParam final String serverRootPath,
-            @RequestParam final String reason) throws ConfigServiceException, JsonProcessingException {
+    public ResponseEntity setMapping(@RequestParam final String xnatRootPath,
+                                     @RequestParam final String serverRootPath,
+                                     @RequestParam final String reason)
+            throws ConfigServiceException, JsonProcessingException {
         transporterConfigService.setTransporterPathMapping(getUser().getLogin(), reason, xnatRootPath, serverRootPath);
         return ResponseEntity.ok().build();
     }
@@ -149,9 +147,10 @@ public class TransporterRestApi extends AbstractXapiRestController {
     // REST Endpoint to request data mirroring
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/mirror/{id}"}, method = POST)
     @ApiOperation(value = "Mirror snapshot data.")
-    public ResponseEntity mirror(final @PathVariable String id)
+    public ResponseEntity mirror(final @PathVariable String id,
+                                 @RequestParam(required = false, defaultValue = "false") boolean force)
             throws Exception {
-        transporterService.mirrorDataSnap(getUser(), id);
+        transporterService.mirrorDataSnap(getUser(), id, force);
         return ResponseEntity.ok().build();
     }
 

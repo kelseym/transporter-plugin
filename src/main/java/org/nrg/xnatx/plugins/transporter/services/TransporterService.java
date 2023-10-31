@@ -7,7 +7,6 @@ import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,17 +19,17 @@ public interface TransporterService {
 
     DataSnap getResolvedDataSnap(UserI user, String id);
 
-    Optional<DataSnap> storeDataSnap(UserI user, DataSnap dataSnap);
+    Optional<DataSnap> storeDataSnap(UserI user, DataSnap dataSnap, Boolean resolve) throws Exception;
 
     void deleteDataSnap(UserI user, String id) throws NotFoundException, UnauthorizedException;
 
     void deleteDataSnaps(@Nonnull UserI user) throws UnauthorizedException;
 
-    DataSnap mirrorDataSnap(UserI user, String id) throws Exception;
+    DataSnap mirrorDataSnap(UserI user, String id, Boolean force) throws Exception;
 
     DataSnap getRemappedDataSnap(DataSnap dataSnap) throws RuntimeException;
 
     Payload createPayload(UserI user, String label) throws Exception;
 
-    List<Payload> createPayloads(UserI user);
+    List<Payload> getAvailablePayloads(UserI user);
 }

@@ -75,11 +75,13 @@ if __name__ == "__main__":
     print(json.dumps(datasnap, indent=4))
 
     # POST to the REST API endpoint
-    print("Posting DataSnap to" + datasnap_endpoint)
+    print("Posting DataSnap to " + datasnap_endpoint)
     headers = {
         "Content-Type": "application/json"
     }
-    response = requests.post(datasnap_endpoint, headers=headers, data=json.dumps(datasnap), auth=(xnat_user, xnat_pass))
+    params = {'resolve': True}
+
+    response = requests.post(datasnap_endpoint, headers=headers, data=json.dumps(datasnap), auth=(xnat_user, xnat_pass), params=params)
 
     # Check the response
     if response.status_code == 200:

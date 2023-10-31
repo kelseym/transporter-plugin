@@ -15,11 +15,7 @@ import org.nrg.framework.orm.hibernate.AbstractHibernateEntity;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.springframework.context.annotation.Lazy;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @ToString
@@ -36,6 +32,7 @@ public class DataSnapEntity extends AbstractHibernateEntity {
     private String label;
     private String owner;
     private String description;
+    private DataSnap.BuildState buildState;
     private DataSnap snap;
 
     @Column(unique = true, name = "label")
@@ -49,6 +46,11 @@ public class DataSnapEntity extends AbstractHibernateEntity {
     @Column(name = "description")
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    @Column(name = "state")
+    @Enumerated(EnumType.STRING)
+    public DataSnap.BuildState getBuildState() { return buildState; }
+    public void setBuildState(DataSnap.BuildState buildState) { this.buildState = buildState; }
 
     @Basic(fetch = FetchType.LAZY)
     @Type(type = "jsonb")

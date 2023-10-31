@@ -62,13 +62,15 @@ public class DefaultPayloadService implements PayloadService {
     @Override
     public List<Payload> createPayloads(List<DataSnap> dataSnaps) {
         if (dataSnaps != null) {
-            return dataSnaps.stream().map(dataSnap -> {
-                try {
-                    return createPayload(dataSnap, Payload.Type.DIRECTORY);
-                } catch (Exception e) {
-                    log.error("Error creating payload for data snap " + dataSnap.getLabel(), e);
-                    return null;
-                }
+            return dataSnaps.stream()
+                    .filter(ds -> ds.getBuildState() != null && ds.getBuildState().equals(DataSnap.BuildState.MIRRORED))
+                    .map(dataSnap -> {
+                        try {
+                            return createPayload(dataSnap, Payload.Type.DIRECTORY);
+                        } catch (Exception e) {
+                            log.error("Error creating payload for data snap " + dataSnap.getLabel(), e);
+                            return null;
+                        }
             }).collect(Collectors.toList());
         } else {
             return Lists.newArrayList();
@@ -76,7 +78,7 @@ public class DefaultPayloadService implements PayloadService {
     }
 
     private List<Payload.FileManifest> dataSnapToDirectoryManifest(DataSnap dataSnap) {
-        if (dataSnap.getBuildState().equals(DataSnap.BuildState.MIRRORED)) {
+        if (DataSnap.BuildState.MIRRORED.equals(dataSnap.getBuildState())) {
             return Arrays.asList(Payload.FileManifest.builder()
                     .path(dataSnap.getRootPath())
                     .build());

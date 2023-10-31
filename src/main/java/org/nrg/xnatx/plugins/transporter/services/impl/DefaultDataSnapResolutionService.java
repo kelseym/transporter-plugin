@@ -88,7 +88,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                 else {
                     Files.createDirectories(destinationPath.getParent());
                     if (Files.isRegularFile(sourcePath)) {
-                        Files.createSymbolicLink(remapRootDirectory(transporterPathMapping, destinationPath), sourcePath);
+                        Files.createSymbolicLink(destinationPath, remapRootDirectory(transporterPathMapping, sourcePath));
                     }
                 }
             } catch (UncheckedIOException | IOException e) {

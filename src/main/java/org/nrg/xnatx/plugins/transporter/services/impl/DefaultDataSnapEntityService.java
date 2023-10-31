@@ -75,6 +75,7 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
         DataSnapEntity entity = get(resolveDataSnap.getId());
         if (login.equals(entity.getOwner())) {
             entity.setLabel(resolveDataSnap.getLabel());
+            entity.setBuildState(resolveDataSnap.getBuildState());
             entity.setDescription(resolveDataSnap.getDescription());
             entity.setSnap(resolveDataSnap);
             update(entity);
@@ -90,6 +91,7 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
             entity.setOwner(owner);
             entity.setLabel(dataSnap.getLabel());
             entity.setDescription(dataSnap.getDescription());
+            entity.setBuildState(dataSnap.getBuildState());
             entity.setSnap(dataSnap);
             return entity;
         } catch (Exception e) {
@@ -103,8 +105,12 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
         try {
             return includeFullSnap ?
                     entity.getSnap().toBuilder().id(entity.getId()).build() :
-                    DataSnap.builder().label(entity.getLabel())
-                            .description(entity.getDescription()).id(entity.getId()).build();
+                    DataSnap.builder()
+                            .label(entity.getLabel())
+                            .id(entity.getId())
+                            .buildState(entity.getBuildState())
+                            .description(entity.getDescription())
+                                    .build();
         } catch (Exception e) {
             throw new RuntimeException("An error occurred trying to convert the data snap to an entity", e);
         }

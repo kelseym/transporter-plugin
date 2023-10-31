@@ -95,10 +95,16 @@ public class DefaultTransporterService implements TransporterService {
     }
 
     @Override
-    public Optional<DataSnap> storeDataSnap(@Nonnull UserI user, @Nonnull DataSnap dataSnap) {
-        return Optional.ofNullable(dataSnapEntityService
-                .addDataSnap(user.getLogin(),
-                        dataSnap.toBuilder().buildState(CREATED).build()));
+    public Optional<DataSnap> storeDataSnap(@Nonnull UserI user, @Nonnull DataSnap dataSnap, Boolean resolve) throws Exception {
+
+        if (resolve) {
+            dataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
+        }
+
+        dataSnapEntityService.addDataSnap(user.getLogin(), dataSnap.toBuilder()
+                .buildState(resolve ? RESOLVED : CREATED).build());
+
+        return Optional.of(dataSnap);
     }
 
 
@@ -114,7 +120,7 @@ public class DefaultTransporterService implements TransporterService {
     }
 
     @Override
-    public DataSnap mirrorDataSnap(@Nonnull UserI user, @Nonnull String id) throws Exception {
+    public DataSnap mirrorDataSnap(@Nonnull UserI user, @Nonnull String id, @Nonnull Boolean force) throws Exception {
         DataSnap dataSnap = getDataSnap(user, id);
         if (dataSnap != null) {
             switch (dataSnap.getBuildState()) {
@@ -123,12 +129,17 @@ public class DefaultTransporterService implements TransporterService {
                 case RESOLVED:
                     dataSnap = dataSnapResolutionService.mirrorDataSnap(dataSnap);
                 case MIRRORED:
-                    return dataSnap;
+                    if (force) {
+                        dataSnap = dataSnapResolutionService.mirrorDataSnap(
+                                dataSnapResolutionService.resolveDataSnap(dataSnap));
+                    }
+                    break;
                 default:
                     throw new RuntimeException("Data snap " + dataSnap.getId() + " has an invalid build state: " + dataSnap.getBuildState());
             }
+            dataSnapEntityService.updateDataSnap(user.getLogin(), dataSnap);
         }
-        return null;
+        return dataSnap;
     }
 
     @Override
@@ -143,7 +154,7 @@ public class DefaultTransporterService implements TransporterService {
     @Override
     public Payload createPayload(UserI user, String label) throws Exception {
         DataSnap dataSnap = getDataSnapByLabel(user, label);
-        dataSnap = mirrorDataSnap(user, Long.toString(dataSnap.getId()));
+        dataSnap = mirrorDataSnap(user, Long.toString(dataSnap.getId()), false);
         return payloadService.createPayload(
                 transporterConfigService.getTransporterPathMapping().isRemapped()
                 ? getRemappedDataSnap(dataSnap) : dataSnap,
@@ -151,7 +162,7 @@ public class DefaultTransporterService implements TransporterService {
     }
 
     @Override
-    public List<Payload> createPayloads(UserI user) {
+    public List<Payload> getAvailablePayloads(UserI user) {
         List<DataSnap> dataSnaps = getDataSnaps(user);
         return payloadService.createPayloads(dataSnaps);
     }
