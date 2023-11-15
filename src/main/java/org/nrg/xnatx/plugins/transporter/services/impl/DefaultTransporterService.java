@@ -4,23 +4,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnat.services.archive.CatalogService;
+import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
-import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
-import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
-import org.nrg.xnatx.plugins.transporter.services.PayloadService;
-import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
-import org.nrg.xnatx.plugins.transporter.services.TransporterService;
+import org.nrg.xnatx.plugins.transporter.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.nrg.xnatx.plugins.transporter.model.DataSnap.BuildState.*;
+import static org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity.Role.EDITOR;
+import static org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity.Role.READER;
 
 @Slf4j
 @Service
@@ -28,6 +28,7 @@ public class DefaultTransporterService implements TransporterService {
 
     private final DataSnapResolutionService dataSnapResolutionService;
     private final DataSnapEntityService dataSnapEntityService;
+    private final SnapUserEntityService snapUserEntityService;
     private final CatalogService catalogService;
     private final TransporterConfigService transporterConfigService;
     private final PayloadService payloadService;
@@ -36,11 +37,13 @@ public class DefaultTransporterService implements TransporterService {
     @Autowired
     public DefaultTransporterService(final DataSnapResolutionService dataSnapResolutionService,
                                      final DataSnapEntityService dataSnapEntityService,
+                                     final SnapUserEntityService snapUserEntityService,
                                      final CatalogService catalogService,
                                      final TransporterConfigService transporterConfigService,
                                      final PayloadService payloadService) {
         this.dataSnapResolutionService = dataSnapResolutionService;
         this.dataSnapEntityService = dataSnapEntityService;
+        this.snapUserEntityService = snapUserEntityService;
         this.catalogService = catalogService;
         this.transporterConfigService = transporterConfigService;
         this.payloadService = payloadService;
@@ -49,38 +52,36 @@ public class DefaultTransporterService implements TransporterService {
 
     @Override
     public List<DataSnap> getDataSnaps(UserI user) {
-
         return dataSnapEntityService.getDataSnaps(user.getLogin());
     }
 
     @Override
-    public DataSnap getDataSnap(UserI user, String id) {
-
-        try {
-            return dataSnapEntityService.getDataSnap(user.getLogin(), Long.parseLong(id));
-        } catch (NotFoundException e) {
-            return null;
+    public DataSnap getDataSnap(UserI user, String id) throws UnauthorizedException, NotFoundException {
+        List<SnapUserEntity> readUsers = snapUserEntityService.findByDataSnapId(Long.parseLong(id));
+        if (readUsers.stream().noneMatch(sue -> sue.getLogin().equals(user.getLogin()))) {
+            throw new UnauthorizedException("User " + user.getUsername() + " is not authorized to read data snap " + id);
         }
-    }
-    @Override
-    public DataSnap getDataSnapByLabel(UserI user, String label) {
-
-        try {
-            return dataSnapEntityService.getDataSnap(user.getLogin(), label);
-        } catch (NotFoundException e) {
-            return null;
-        }
+        return dataSnapEntityService.getDataSnap(Long.parseLong(id));
     }
 
     @Override
-    public DataSnap getResolvedDataSnap(UserI user, String id) throws RuntimeException {
+    public DataSnap getDataSnapByLabel(UserI user, String label) throws UnauthorizedException, NotFoundException {
+        List<SnapUserEntity> readUsers = snapUserEntityService.findByDataSnapLabel(label);
+        if (readUsers.stream().noneMatch(sue -> sue.getLogin().equals(user.getLogin()))) {
+            throw new UnauthorizedException("User " + user.getUsername() + " is not authorized to read data snap " + label);
+        }
+        return dataSnapEntityService.getDataSnap(label);
+    }
+
+    @Override
+    public DataSnap getResolvedDataSnap(UserI user, String id) throws RuntimeException, UnauthorizedException, NotFoundException {
         DataSnap dataSnap = getDataSnap(user, id);
         try {
             if (dataSnap != null) {
                 switch (dataSnap.getBuildState()) {
                     case CREATED:
                         DataSnap resolveDataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
-                        dataSnapEntityService.updateDataSnap(user.getLogin(), resolveDataSnap);
+                        dataSnapEntityService.updateDataSnap(resolveDataSnap);
                     case RESOLVED:
                     case MIRRORED:
                         return dataSnap;
@@ -96,28 +97,52 @@ public class DefaultTransporterService implements TransporterService {
 
     @Override
     public Optional<DataSnap> storeDataSnap(@Nonnull UserI user, @Nonnull DataSnap dataSnap, Boolean resolve) throws Exception {
-
         if (resolve) {
             dataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
         }
-
-        dataSnapEntityService.addDataSnap(user.getLogin(), dataSnap.toBuilder()
+        dataSnap = dataSnapEntityService.createDataSnap(user.getLogin(),dataSnap.toBuilder()
                 .buildState(resolve ? RESOLVED : CREATED).build());
-
         return Optional.of(dataSnap);
     }
 
+    @Override
+    public DataSnap addDataSnapEditor(@Nonnull UserI userI, @Nonnull String id, @Nonnull String editorLogin) throws Exception {
+        DataSnap dataSnap = dataSnapEntityService.getDataSnapsByOwner(userI.getLogin()).stream()
+                .filter(ds -> Objects.equals(ds.getId(), Long.parseLong(id)))
+                .findFirst().orElse(null);
+        if (dataSnap != null) {
+            return dataSnapEntityService.addUser(dataSnap, editorLogin, EDITOR);
+        }
+        throw new Exception(userI.getLogin() + " can not add user to DataSnap " + id);
+    }
+
+    @Override
+    public DataSnap addDataSnapReader(@Nonnull UserI userI, @Nonnull String id, @Nonnull String readerLogin) throws Exception {
+        DataSnap dataSnap = dataSnapEntityService.getDataSnapsByOwner(userI.getLogin()).stream()
+                .filter(ds -> Objects.equals(ds.getId(), Long.parseLong(id)))
+                .findFirst().orElse(null);
+        if (dataSnap != null) {
+            return dataSnapEntityService.addUser(dataSnap, readerLogin, READER);
+        }
+        throw new Exception(userI.getLogin() + " can not add user to DataSnap " + id);    }
+
+    @Override
+    public void removeDataSnapUser(@Nonnull UserI userI, @Nonnull String id) throws Exception {
+        DataSnap dataSnap = getDataSnap(userI, id);
+        if (dataSnap != null) {
+            dataSnapEntityService.removeUser(dataSnap, userI.getLogin());
+        }
+    }
 
     @Override
     public void deleteDataSnap(@Nonnull UserI user, @Nonnull String id) throws NotFoundException, UnauthorizedException {
-        dataSnapEntityService.deleteDataSnap(user.getLogin(), Long.parseLong(id));
+        List<SnapUserEntity> users = snapUserEntityService.findByDataSnapId(Long.parseLong(id));
+        if (users.stream().noneMatch(sue -> sue.getLogin().equals(user.getLogin()) && sue.getRole().equals(SnapUserEntity.Role.OWNER))) {
+            throw new UnauthorizedException("User " + user.getUsername() + " is not authorized to delete data snap " + id);
+        }
+        dataSnapEntityService.deleteDataSnap(Long.parseLong(id));
     }
 
-    // TODO: Is this method needed?
-    @Override
-    public void deleteDataSnaps(@Nonnull UserI user) throws UnauthorizedException {
-        dataSnapEntityService.deleteDataSnaps(user.getLogin());
-    }
 
     @Override
     public DataSnap mirrorDataSnap(@Nonnull UserI user, @Nonnull String id, @Nonnull Boolean force) throws Exception {
@@ -137,7 +162,7 @@ public class DefaultTransporterService implements TransporterService {
                 default:
                     throw new RuntimeException("Data snap " + dataSnap.getId() + " has an invalid build state: " + dataSnap.getBuildState());
             }
-            dataSnapEntityService.updateDataSnap(user.getLogin(), dataSnap);
+            dataSnapEntityService.updateDataSnap(dataSnap);
         }
         return dataSnap;
     }

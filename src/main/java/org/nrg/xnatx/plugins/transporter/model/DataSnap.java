@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 @ApiModel(value = "DataSnap",
         description = "Data manifest structure used to drive the XNAT Transporter function.")
 
-public class DataSnap {
+public class DataSnap implements Serializable {
 
     @Nullable
     private Long id;

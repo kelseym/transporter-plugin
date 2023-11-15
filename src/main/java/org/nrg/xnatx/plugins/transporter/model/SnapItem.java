@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.stream.Stream;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class SnapItem {
+public class SnapItem implements Serializable {
     @Nullable private String id;
     @Nullable private String label;
     @JsonProperty("file-type") private FileType fileType;

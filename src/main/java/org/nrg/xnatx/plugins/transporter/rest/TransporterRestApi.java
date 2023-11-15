@@ -67,6 +67,22 @@ public class TransporterRestApi extends AbstractXapiRestController {
         }
     }
 
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}/reader"}, method = POST)
+    @ApiOperation(value = "Add a reader to a DataSnap. Restricted to DataSnap owner.")
+    public ResponseEntity<DataSnap> addReader(final @PathVariable String id,
+                                             @RequestParam(required = true) String userLogin) throws Exception {
+        DataSnap dataSnap = transporterService.addDataSnapReader(getUser(), id, userLogin);
+        return ResponseEntity.ok(dataSnap);
+    }
+
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}/editor"}, method = POST)
+    @ApiOperation(value = "Add a editor to a DataSnap. Restricted to DataSnap owner.")
+    public ResponseEntity<DataSnap> addEditor(final @PathVariable String id,
+                                              @RequestParam(required = true) String userLogin) throws Exception {
+        DataSnap dataSnap = transporterService.addDataSnapEditor(getUser(), id, userLogin);
+        return ResponseEntity.ok(dataSnap);
+    }
+
     // REST Endpoint to respond to request for available snapshots
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnaps"}, method = GET)
     @ApiOperation(value = "Get available snapshots.")
@@ -79,7 +95,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}"}, method = GET)
     @ApiOperation(value = "Get snapshot by id.")
     @ResponseBody
-    public DataSnap getSnap(final @PathVariable String id) {
+    public DataSnap getSnap(final @PathVariable String id) throws UnauthorizedException, NotFoundException {
         return transporterService.getDataSnap(getUser(), id);
     }
 
@@ -89,18 +105,6 @@ public class TransporterRestApi extends AbstractXapiRestController {
     public ResponseEntity<Void> delete(final @PathVariable String id) throws NotFoundException, UnauthorizedException {
         transporterService.deleteDataSnap(getUser(), String.valueOf(id));
         return ResponseEntity.noContent().build();
-    }
-
-    // REST Endpoint to DELETE all snapshots for a given user
-    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnaps"}, method = DELETE)
-    @ApiOperation(value = "Delete all snapshots for user.")
-    public ResponseEntity<Void> delete(final @RequestParam(required = false, defaultValue = "false") boolean verify)
-            throws UnauthorizedException {
-        if (verify) {
-            transporterService.deleteDataSnaps(getUser());
-            return ResponseEntity.noContent().build();
-        }
-        throw new UnauthorizedException("Verification required to delete all snapshots.");
     }
 
     // REST Endpoint to GET payload by label for a given user

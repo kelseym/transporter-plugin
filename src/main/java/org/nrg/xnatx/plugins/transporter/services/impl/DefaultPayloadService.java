@@ -36,15 +36,6 @@ public class DefaultPayloadService implements PayloadService {
         this.transporterConfigService = transporterConfigService;
     }
 
-    @Override
-    public Payload createPayload(@Nonnull String username, String snapId) throws Exception {
-        DataSnap dataSnap = dataSnapEntityService.getDataSnap(username, Long.parseLong(snapId));
-        if (dataSnap != null) {
-            dataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
-            return createPayload(dataSnap, Payload.Type.DIRECTORY);
-        }
-        throw new NotFoundException("No data snap found for user " + username + " with id " + snapId);
-    }
 
     // Build a payload object from the DataSnap
     @Override
