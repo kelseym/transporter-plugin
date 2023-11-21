@@ -16,6 +16,7 @@ import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
+import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
 import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
 import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterService;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -152,6 +154,17 @@ public class TransporterRestApi extends AbstractXapiRestController {
                                  @RequestParam(required = false, defaultValue = "false") boolean force)
             throws Exception {
         transporterService.mirrorDataSnap(getUser(), id, force);
+        return ResponseEntity.ok().build();
+    }
+
+    // REST Endpoint to collect remote application status updated
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/heartbeat"}, method = POST)
+    @ApiOperation(value = "Update remote application status.")
+    public ResponseEntity updateStatus(@RequestParam(required = true) RemoteAppHeartbeat heartbeat)
+            throws Exception {
+        log.debug("Received heartbeat from " + heartbeat.getRemoteHost());
+        log.debug(heartbeat.toString());
+    //TODO:    transporterConfigService.updateRemoteApplicationStatus(getUser().getLogin(), status);
         return ResponseEntity.ok().build();
     }
 

@@ -4,7 +4,6 @@ import javax.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.nrg.framework.orm.hibernate.AbstractHibernateEntity;
 
