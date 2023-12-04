@@ -3,11 +3,12 @@ package org.nrg.xnatx.plugins.transporter.services.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
-import org.nrg.xnat.services.archive.CatalogService;
 import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
+import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
+import org.nrg.xnatx.plugins.transporter.model.TransporterActivityItem;
 import org.nrg.xnatx.plugins.transporter.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class DefaultTransporterService implements TransporterService {
     private final DataSnapResolutionService dataSnapResolutionService;
     private final DataSnapEntityService dataSnapEntityService;
     private final SnapUserEntityService snapUserEntityService;
-    private final CatalogService catalogService;
+    private final TransporterActivityService transporterActivityService;
     private final TransporterConfigService transporterConfigService;
     private final PayloadService payloadService;
 
@@ -38,13 +39,13 @@ public class DefaultTransporterService implements TransporterService {
     public DefaultTransporterService(final DataSnapResolutionService dataSnapResolutionService,
                                      final DataSnapEntityService dataSnapEntityService,
                                      final SnapUserEntityService snapUserEntityService,
-                                     final CatalogService catalogService,
+                                     final TransporterActivityService transporterActivityService,
                                      final TransporterConfigService transporterConfigService,
                                      final PayloadService payloadService) {
         this.dataSnapResolutionService = dataSnapResolutionService;
         this.dataSnapEntityService = dataSnapEntityService;
         this.snapUserEntityService = snapUserEntityService;
-        this.catalogService = catalogService;
+        this.transporterActivityService = transporterActivityService;
         this.transporterConfigService = transporterConfigService;
         this.payloadService = payloadService;
     }
@@ -191,5 +192,31 @@ public class DefaultTransporterService implements TransporterService {
         List<DataSnap> dataSnaps = getDataSnaps(user);
         return payloadService.createPayloads(dataSnaps);
     }
+
+    @Override
+    public void updateRemoteApplicationStatus(RemoteAppHeartbeat heartbeat) {
+        transporterActivityService.updateRemoteApplicationStatus(heartbeat);
+    }
+
+    @Override
+    public List<RemoteAppHeartbeat> getRemoteApplicationStatus() {
+        return transporterActivityService.getRemoteApplicationStatus();
+    }
+
+    @Override
+    public RemoteAppHeartbeat getRemoteApplicationStatus(String remoteAppId) {
+        return transporterActivityService.getRemoteApplicationStatus(remoteAppId);
+    }
+
+    @Override
+    public void updateRemoteApplicationActivity(TransporterActivityItem transporterActivityItem) {
+        transporterActivityService.updateRemoteApplicationActivity(transporterActivityItem);
+    }
+
+    @Override
+    public List<TransporterActivityItem> getRemoteApplicationActivity(UserI user, String snapshotId) {
+        return transporterActivityService.getRemoteApplicationActivity(user, snapshotId);
+    }
+
 
 }

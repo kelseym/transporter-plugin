@@ -6,6 +6,8 @@ import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
+import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
+import org.nrg.xnatx.plugins.transporter.model.TransporterActivityItem;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -37,4 +39,14 @@ public interface TransporterService {
     Payload createPayload(UserI user, String label) throws Exception;
 
     List<Payload> getAvailablePayloads(UserI user);
+
+    List<RemoteAppHeartbeat> getRemoteApplicationStatus();
+
+    RemoteAppHeartbeat getRemoteApplicationStatus(String remoteAppId);
+
+    void updateRemoteApplicationActivity(TransporterActivityItem transporterActivityItem);
+
+    void updateRemoteApplicationStatus(RemoteAppHeartbeat heartbeat);
+
+    List<TransporterActivityItem> getRemoteApplicationActivity(UserI user, String snapshotId);
 }

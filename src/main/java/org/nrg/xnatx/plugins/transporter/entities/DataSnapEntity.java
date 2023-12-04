@@ -1,6 +1,5 @@
 package org.nrg.xnatx.plugins.transporter.entities;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,16 +7,13 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.nrg.framework.orm.hibernate.AbstractHibernateEntity;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
-import org.springframework.context.annotation.Lazy;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity

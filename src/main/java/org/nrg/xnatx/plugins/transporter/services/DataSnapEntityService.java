@@ -1,6 +1,8 @@
 package org.nrg.xnatx.plugins.transporter.services;
 
 import org.nrg.framework.exceptions.NotFoundException;
+import org.nrg.framework.orm.hibernate.BaseHibernateService;
+import org.nrg.xnatx.plugins.transporter.entities.DataSnapEntity;
 import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
@@ -8,7 +10,7 @@ import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public interface DataSnapEntityService {
+public interface DataSnapEntityService extends BaseHibernateService<DataSnapEntity> {
 
     DataSnap createDataSnap(String ownerLogin, DataSnap dataSnap);
 
