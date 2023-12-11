@@ -130,14 +130,22 @@ public class TransporterRestApi extends AbstractXapiRestController {
         return ResponseEntity.ok(transporterService.getAvailablePayloads(getUser()));
     }
 
+    //// REST Endpoint to set transporter path mapping
+    //@XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)
+    //@ApiOperation(value = "Set transporter path mapping.")
+    //public ResponseEntity setMapping(@RequestParam final String xnatRootPath,
+    //                                 @RequestParam final String serverRootPath)
+    //        throws ConfigServiceException, JsonProcessingException {
+    //    transporterConfigService.setTransporterPathMapping(getUser().getLogin(), null, xnatRootPath, serverRootPath);
+    //    return ResponseEntity.ok().build();
+    //}
+
     // REST Endpoint to set transporter path mapping
-    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)
+    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST, consumes = JSON)
     @ApiOperation(value = "Set transporter path mapping.")
-    public ResponseEntity setMapping(@RequestParam final String xnatRootPath,
-                                     @RequestParam final String serverRootPath,
-                                     @RequestParam final String reason)
+    public ResponseEntity setMappingJson(@RequestBody final TransporterPathMapping transporterPathMapping)
             throws ConfigServiceException, JsonProcessingException {
-        transporterConfigService.setTransporterPathMapping(getUser().getLogin(), reason, xnatRootPath, serverRootPath);
+        transporterConfigService.setTransporterPathMapping(getUser().getLogin(), null, transporterPathMapping.getXnatRootPath(), transporterPathMapping.getServerRootPath());
         return ResponseEntity.ok().build();
     }
 

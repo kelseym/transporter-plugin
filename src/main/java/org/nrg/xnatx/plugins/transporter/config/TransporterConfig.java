@@ -18,8 +18,8 @@ import org.springframework.context.annotation.*;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 @Slf4j
-@XnatPlugin(value = "Transporter",
-        name = "Transporter",
+@XnatPlugin(value = "transporter",
+        name = "transporter",
         description = "XNAT Transporter Plugin",
         logConfigurationFile = "META-INF/resources/transporter-logback.xml",
         entityPackages = "org.nrg.xnatx.plugins.transporter.entities")

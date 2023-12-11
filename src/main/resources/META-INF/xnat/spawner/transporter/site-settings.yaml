@@ -1,0 +1,98 @@
+####
+#### Transporter Group
+####
+
+transporterConfigForm:
+  kind: panel.form
+  label: "Site-wide Transporter Settings"
+  name: transporterConfigForm
+  id: transporter-config-form
+  contentType: json
+  method: POST
+  element:
+    style:
+      padding: 20px 0
+  action: "/xapi/transporter/path-mapping"
+  contents:
+    serverRootPath:
+      kind: panel.input.text
+      name: serverRootPath
+      label: Server Path Prefix
+      element:
+        title: XNAT Path Prefix
+      description: >
+        Enter the server path to the XNAT_HOME mount, i.e. "/docker/my-data/XNAT"
+    xnatRootPath:
+      kind: panel.input.text
+      name: xnatRootPath
+      label: XNAT Path Prefix
+      element:
+        title: XNAT Path Prefix
+      description: >
+        Enter the local XNAT_HOME path, i.e. "/data/xnat"
+
+transporterRemoteStatusPanel:
+  kind: panel.dataTable
+  name: transporterRemoteStatusTable
+  label: Remote App Status
+  load: /xapi/transporter/heartbeat
+  items:
+    id: ~!
+    remoteAppId: Remote App Id
+    remoteHost: Remote Host
+    status: Status
+    message: Message
+    formattedUptime: Uptime
+    formattedTimestamp: Last Update
+
+transporterActivityTable:
+  kind: panel.dataTable
+  name : transporterActivityTable
+  label: Site-wide Transporter Activity
+  load: /xapi/transporter/activity
+  sortable: true
+  items:
+    uuid: ~!
+    username: User
+    snapshotId: Snapshot ID
+    event: Event
+    formattedTimestamp: Timestamp
+
+
+#################################################
+####  Root Site Admin Spawner Config Object  ####
+#################################################
+
+siteSettings:
+  kind: tabs
+  name: transporterAdminPage
+  label: Administer Transporter
+  meta:
+    tabGroups:
+      transporterTabGroup: Transporter
+  contains: tabs
+  tabs:
+    transporterRemoteStatusTab:
+      kind: tab
+      name: transporterRemoteStatusTab
+      label: Remote App Status
+      group: transporterTabGroup
+      active: true
+      contents:
+        ${transporterRemoteStatusPanel}
+    transporterActivityTab:
+      kind: tab
+      name: transporterActivityTab
+      label: Transporter Activity
+      group: transporterTabGroup
+      active: false
+      contents:
+        ${transporterActivityTable}
+    transporterConfigTab:
+      kind: tab
+      name: transporterConfigTab
+      label: Configuration
+      group: transporterTabGroup
+      active: false
+      contents:
+        ${transporterConfigForm}

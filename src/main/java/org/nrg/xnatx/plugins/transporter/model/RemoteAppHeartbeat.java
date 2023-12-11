@@ -8,6 +8,7 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @ToString
@@ -23,5 +24,22 @@ public class RemoteAppHeartbeat implements Serializable {
     private String message;
     private LocalDateTime timestamp;
     private long uptime;
+
+    public String getFormattedTimestamp() {
+        if (timestamp != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return timestamp.format(formatter);
+        }
+        return timestamp != null ? timestamp.toString() : "";
+    }
+
+    public String getFormattedUptime() {
+        long days = uptime / (24 * 3600);
+        long hours = (uptime % (24 * 3600)) / 3600;
+        long minutes = (uptime % 3600) / 60;
+        long seconds = uptime % 60;
+
+        return String.format("%d days, %02d h, %02d m, %02d s", days, hours, minutes, seconds);
+    }
 }
 

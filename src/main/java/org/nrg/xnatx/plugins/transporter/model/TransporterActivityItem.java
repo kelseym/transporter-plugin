@@ -8,6 +8,7 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @ToString
@@ -54,5 +55,13 @@ public class TransporterActivityItem implements Serializable {
         private String event;
         private LocalDateTime timestamp;
         private RemoteAppHeartbeat remoteAppHeartbeat;
+    }
+
+    public String getFormattedTimestamp() {
+        if (timestamp != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return timestamp.format(formatter);
+        }
+        return timestamp != null ? timestamp.toString() : "";
     }
 }

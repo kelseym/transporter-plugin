@@ -2,7 +2,7 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.bundling.Jar
 
 /*
- * xnat-template-plugin: build.gradle
+ * xnat-transporter-plugin: build.gradle
  * XNAT https://www.xnat.org
  * Copyright (c) 2005-2021, Washington University School of Medicine
  * All Rights Reserved
@@ -16,9 +16,6 @@ buildscript {
     }
 }
 
-// TODO: This is the minimum set of Gradle plugins required to build most XNAT plugins.
-//       You may include many others, including plugins for testing and test coverage,
-//       IDE integration, and more.
 plugins {
     id "idea"
     id "jacoco"
