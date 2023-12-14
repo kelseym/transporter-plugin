@@ -29,6 +29,7 @@ public class TransporterActivityEntity extends AbstractHibernateEntity {
     private String uuid;
     private String username;
     private String snapshotId;
+    private String sessionId;
     private String event;
     private LocalDateTime eventTimestamp;
 
@@ -44,6 +45,10 @@ public class TransporterActivityEntity extends AbstractHibernateEntity {
     public String getSnapshotId() { return snapshotId; }
     public void setSnapshotId(String snapshotId) { this.snapshotId = snapshotId; }
 
+    @Column(name = "session_id")
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
+
     @Column
     public String getEvent() { return event; }
     public void setEvent(String event) { this.event = event;}
@@ -57,6 +62,7 @@ public class TransporterActivityEntity extends AbstractHibernateEntity {
                 .uuid(activityItem.getUuid())
                 .username(activityItem.getUsername())
                 .snapshotId(activityItem.getSnapshotId())
+                .sessionId(activityItem.getSessionId())
                 .event(activityItem.getEvent())
                 .eventTimestamp(activityItem.getTimestamp())
                 .build();
@@ -71,6 +77,7 @@ public class TransporterActivityEntity extends AbstractHibernateEntity {
                 .uuid(entity.getUuid())
                 .username(entity.getUsername())
                 .snapshotId(entity.getSnapshotId())
+                .sessionId(entity.getSessionId())
                 .event(entity.getEvent())
                 .timestamp(entity.getEventTimestamp())
                 .build();

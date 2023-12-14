@@ -53,6 +53,7 @@ transporterActivityTable:
   sortable: true
   items:
     uuid: ~!
+    sessionId: Session ID
     username: User
     snapshotId: Snapshot ID
     event: Event

@@ -20,41 +20,32 @@ public class TransporterActivityItem implements Serializable {
     private String uuid;
     private String username;
     private String snapshotId;
+    private String sessionId;
     private String event;
     private LocalDateTime timestamp;
     private RemoteAppHeartbeat remoteAppHeartbeat;
 
-    public static TransporterActivityItem create(String uuid, String username, String snapshotId, String event, RemoteAppHeartbeat remoteAppHeartbeat) {
+    public static TransporterActivityItem create(String uuid, String username, String snapshotId, String sessionId, String event, RemoteAppHeartbeat remoteAppHeartbeat) {
         return TransporterActivityItem.builder()
                 .uuid(uuid)
                 .username(username)
                 .snapshotId(snapshotId)
+                .sessionId(sessionId)
                 .event(event)
                 .remoteAppHeartbeat(remoteAppHeartbeat)
                 .build();
     }
 
-    public static TransporterActivityItem create(String username, String uuid, TransporterActivityItemCreator creator) {
+    public static TransporterActivityItem create(String username, String messageUuid, TransporterActivityItemCreator creator) {
         return TransporterActivityItem.builder()
-                .uuid(uuid)
+                .uuid(messageUuid)
                 .username(username)
                 .snapshotId(creator.getSnapshotId())
+                .sessionId(creator.getSessionId())
                 .event(creator.getEvent())
                 .timestamp(creator.getTimestamp())
                 .remoteAppHeartbeat(creator.getRemoteAppHeartbeat())
                 .build();
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder(toBuilder = true)
-    public static class TransporterActivityItemCreator implements Serializable {
-        private String username;
-        private String snapshotId;
-        private String event;
-        private LocalDateTime timestamp;
-        private RemoteAppHeartbeat remoteAppHeartbeat;
     }
 
     public String getFormattedTimestamp() {
@@ -64,4 +55,18 @@ public class TransporterActivityItem implements Serializable {
         }
         return timestamp != null ? timestamp.toString() : "";
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder(toBuilder = true)
+    public static class TransporterActivityItemCreator implements Serializable {
+        private String username;
+        private String snapshotId;
+        private String sessionId;
+        private String event;
+        private LocalDateTime timestamp;
+        private RemoteAppHeartbeat remoteAppHeartbeat;
+    }
+
 }
