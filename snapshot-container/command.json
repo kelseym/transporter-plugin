@@ -1,18 +1,18 @@
 {
     "name": "DataSnap",
-    "description": "Create a DataSnap manifest.",
     "label": "DataSnap",
+    "description": "Create a DataSnap manifest.",
     "version": "0.1",
     "schema-version": "1.0",
-    "image": "python:python:3.11-slim",
+    "image": "xnat/data-snapshot:0.1",
     "type": "docker",
-    "command-line": "datasnap.py #PROJECT_ID#",
+    "command-line": "python datasnap.py #PROJECT_ID#",
     "override-entrypoint": true,
     "mounts": [],
     "environment-variables": {
-        "PROJECT_ID": "#PROJECT_ID#",
+        "DATASNAP_DESC": "#DATASNAP_DESC#",
         "DATASNAP_NAME": "#DATASNAP_NAME#",
-        "DATASNAP_DESC": "#DATASNAP_DESC#"
+        "PROJECT_ID": "#PROJECT_ID#"
     },
     "ports": {},
     "inputs": [
@@ -21,36 +21,39 @@
             "description": "DataSnap name.",
             "type": "string",
             "required": true,
-            "replacement-key": "#DATASNAP_NAME#"
+            "replacement-key": "#DATASNAP_NAME#",
+            "select-values": []
         },
         {
             "name": "description",
             "description": "DataSanp description.",
             "type": "string",
             "required": true,
-            "replacement-key": "#DATASNAP_DESC#"
+            "replacement-key": "#DATASNAP_DESC#",
+            "select-values": []
         },
         {
             "name": "project-id",
             "description": "",
             "type": "string",
             "required": true,
-            "replacement-key": "#PROJECT_ID#"
+            "replacement-key": "#PROJECT_ID#",
+            "select-values": []
         }
     ],
-    "outputs": [
-    ],
+    "outputs": [],
     "xnat": [
         {
             "name": "DataSnap Project",
-            "description": "Create a snapshot manifest using all project files.",
             "label": "datasnap-project",
+            "description": "",
             "contexts": ["xnat:projectData"],
             "external-inputs": [
                 {
                     "name": "project",
                     "description": "",
                     "type": "Project",
+                    "required": true,
                     "load-children": false
                 }
             ],
@@ -59,13 +62,18 @@
                     "name": "project-id",
                     "type": "string",
                     "required": true,
+                    "provides-value-for-command-input": "project-id",
                     "load-children": true,
                     "derived-from-wrapper-input": "project",
                     "derived-from-xnat-object-property": "id",
-                    "provides-value-for-command-input": "project-id"
+                    "multiple": false
                 }
             ],
             "output-handlers": []
         }
-    ]
+    ],
+    "container-labels": {},
+    "generic-resources": {},
+    "ulimits": {},
+    "secrets": []
 }

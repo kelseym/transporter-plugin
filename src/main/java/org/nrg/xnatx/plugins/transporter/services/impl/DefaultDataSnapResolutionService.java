@@ -22,6 +22,7 @@ import org.nrg.xnatx.plugins.transporter.model.SnapItem;
 import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
+import org.nrg.xnatx.plugins.transporter.services.SnapshotPreferences;
 import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,18 +53,18 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
 
     private final DataSnapEntityService dataSnapEntityService;
     private final CatalogService catalogService;
-    private final SiteConfigPreferences siteConfigPreferences;
+    private final SnapshotPreferences snapshotPreferences;
     private final TransporterConfigService transporterConfigService;
 
 
     @Autowired
     public DefaultDataSnapResolutionService(final DataSnapEntityService dataSnapEntityService,
                                             final CatalogService catalogService,
-                                            final SiteConfigPreferences siteConfigPreferences,
+                                            final SnapshotPreferences snapshotPreferences,
                                             final TransporterConfigService transporterConfigService) {
         this.dataSnapEntityService = dataSnapEntityService;
         this.catalogService = catalogService;
-        this.siteConfigPreferences = siteConfigPreferences;
+        this.snapshotPreferences = snapshotPreferences;
         this.transporterConfigService = transporterConfigService;
     }
 
@@ -252,17 +253,16 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
         }
     }
 
-    // TODO: Define a unique directory (in xdat) to store snapshots, e.g. /data/xnat/snapshots
     @Nonnull
     private Path getSnapshotDirectory() throws IOException {
-        final String rootBuildPath = siteConfigPreferences.getBuildPath();
+        final String rootBuildPath = snapshotPreferences.getSnapshotPath();
         final String uuid = UUID.randomUUID().toString();
         final String buildDir = FilenameUtils.concat(rootBuildPath, SNAP_DIR_PREFIX + uuid);
         final Path created;
         try {
             created = Files.createDirectory(Paths.get(buildDir));
         } catch (IOException e) {
-            throw new IOException("Could not create build directory", e);
+            throw new IOException("Could not create snapshot directory", e);
         }
         created.toFile().setWritable(true);
         return created;

@@ -53,6 +53,7 @@ public class DefaultTransporterConfigService implements TransporterConfigService
                 TransporterPathMapping.builder()
                         .xnatRootPath(xnatRootPath)
                         .serverRootPath(serverRootPath).build();
+        log.debug("setTransporterPathMapping: pathMapping={}", pathMapping);
         setTransporterPathMapping(username, reason, pathMapping);
     }
 }

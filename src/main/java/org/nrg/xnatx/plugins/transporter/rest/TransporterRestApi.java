@@ -16,6 +16,8 @@ import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
+import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
+import org.nrg.xnatx.plugins.transporter.model.TransporterActivityItem;
 import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
 import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterService;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
@@ -67,6 +70,22 @@ public class TransporterRestApi extends AbstractXapiRestController {
         }
     }
 
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}/reader"}, method = POST)
+    @ApiOperation(value = "Add a reader to a DataSnap. Restricted to DataSnap owner.")
+    public ResponseEntity<DataSnap> addReader(final @PathVariable String id,
+                                             @RequestParam(required = true) String userLogin) throws Exception {
+        DataSnap dataSnap = transporterService.addDataSnapReader(getUser(), id, userLogin);
+        return ResponseEntity.ok(dataSnap);
+    }
+
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}/editor"}, method = POST)
+    @ApiOperation(value = "Add a editor to a DataSnap. Restricted to DataSnap owner.")
+    public ResponseEntity<DataSnap> addEditor(final @PathVariable String id,
+                                              @RequestParam(required = true) String userLogin) throws Exception {
+        DataSnap dataSnap = transporterService.addDataSnapEditor(getUser(), id, userLogin);
+        return ResponseEntity.ok(dataSnap);
+    }
+
     // REST Endpoint to respond to request for available snapshots
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnaps"}, method = GET)
     @ApiOperation(value = "Get available snapshots.")
@@ -79,7 +98,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}"}, method = GET)
     @ApiOperation(value = "Get snapshot by id.")
     @ResponseBody
-    public DataSnap getSnap(final @PathVariable String id) {
+    public DataSnap getSnap(final @PathVariable String id) throws UnauthorizedException, NotFoundException {
         return transporterService.getDataSnap(getUser(), id);
     }
 
@@ -89,18 +108,6 @@ public class TransporterRestApi extends AbstractXapiRestController {
     public ResponseEntity<Void> delete(final @PathVariable String id) throws NotFoundException, UnauthorizedException {
         transporterService.deleteDataSnap(getUser(), String.valueOf(id));
         return ResponseEntity.noContent().build();
-    }
-
-    // REST Endpoint to DELETE all snapshots for a given user
-    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnaps"}, method = DELETE)
-    @ApiOperation(value = "Delete all snapshots for user.")
-    public ResponseEntity<Void> delete(final @RequestParam(required = false, defaultValue = "false") boolean verify)
-            throws UnauthorizedException {
-        if (verify) {
-            transporterService.deleteDataSnaps(getUser());
-            return ResponseEntity.noContent().build();
-        }
-        throw new UnauthorizedException("Verification required to delete all snapshots.");
     }
 
     // REST Endpoint to GET payload by label for a given user
@@ -123,14 +130,22 @@ public class TransporterRestApi extends AbstractXapiRestController {
         return ResponseEntity.ok(transporterService.getAvailablePayloads(getUser()));
     }
 
+    //// REST Endpoint to set transporter path mapping
+    //@XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)
+    //@ApiOperation(value = "Set transporter path mapping.")
+    //public ResponseEntity setMapping(@RequestParam final String xnatRootPath,
+    //                                 @RequestParam final String serverRootPath)
+    //        throws ConfigServiceException, JsonProcessingException {
+    //    transporterConfigService.setTransporterPathMapping(getUser().getLogin(), null, xnatRootPath, serverRootPath);
+    //    return ResponseEntity.ok().build();
+    //}
+
     // REST Endpoint to set transporter path mapping
-    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)
+    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST, consumes = JSON)
     @ApiOperation(value = "Set transporter path mapping.")
-    public ResponseEntity setMapping(@RequestParam final String xnatRootPath,
-                                     @RequestParam final String serverRootPath,
-                                     @RequestParam final String reason)
+    public ResponseEntity setMappingJson(@RequestBody final TransporterPathMapping transporterPathMapping)
             throws ConfigServiceException, JsonProcessingException {
-        transporterConfigService.setTransporterPathMapping(getUser().getLogin(), reason, xnatRootPath, serverRootPath);
+        transporterConfigService.setTransporterPathMapping(getUser().getLogin(), null, transporterPathMapping.getXnatRootPath(), transporterPathMapping.getServerRootPath());
         return ResponseEntity.ok().build();
     }
 
@@ -150,6 +165,65 @@ public class TransporterRestApi extends AbstractXapiRestController {
         transporterService.mirrorDataSnap(getUser(), id, force);
         return ResponseEntity.ok().build();
     }
+
+
+    // ** REMOTE APPLICATION ENDPOINTS ** //
+
+
+    // REST Endpoints to manage remote application status
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/heartbeat"}, method = POST)
+    @ApiOperation(value = "Update remote application status.")
+    public ResponseEntity updateRemoteHeartbeat(@RequestBody(required = true) RemoteAppHeartbeat heartbeat)
+            throws Exception {
+        log.debug("Received heartbeat from " + heartbeat.getRemoteHost());
+        transporterService.updateRemoteApplicationStatus(heartbeat);
+        return ResponseEntity.ok().build();
+    }
+
+    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/heartbeat"}, method = GET)
+    @ApiOperation(value = "Get remote application status.")
+    public ResponseEntity<List<RemoteAppHeartbeat>> getRemoteHeartbeat() throws Exception {
+        return ResponseEntity.ok(transporterService.getRemoteApplicationStatus());
+    }
+
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/heartbeat/{remoteAppId}"}, method = GET)
+    @ApiOperation(value = "Get remote application status by remoteAppId.")
+    public ResponseEntity<RemoteAppHeartbeat> getRemoteHeartbeat(
+            @PathVariable(required = true) String remoteAppId) throws Exception {
+        //TODO: check if user is authorized to get this remoteAppId
+        return ResponseEntity.ok(transporterService.getRemoteApplicationStatus(remoteAppId));
+    }
+
+    // REST endpoints to collect transfer activity from remote application
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = POST)
+    @ApiOperation(value = "Update remote application activity.")
+    public ResponseEntity updateActivity(
+                @RequestBody(required = true) TransporterActivityItem.TransporterActivityItemCreator activityItem,
+                @RequestParam(name = "message_id", required = false) String messageId)
+            throws Exception {
+        if (!getUser().getLogin().equals(activityItem.getUsername())){
+            throw new UnauthorizedException("User " + getUser().getLogin() + " is not authorized to update activity for user " + activityItem.getUsername());
+        }
+        log.debug("Received activity from " + activityItem);
+
+        updateRemoteHeartbeat(activityItem.getRemoteAppHeartbeat());
+
+        transporterService.updateRemoteApplicationActivity(
+                TransporterActivityItem.create(
+                        getUser().getLogin(),
+                        messageId != null ? messageId : UUID.randomUUID().toString(),
+                        activityItem));
+        return ResponseEntity.ok().build();
+    }
+
+    // REST endpoint to get remote application transfer activity
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = GET)
+    @ApiOperation(value = "Get remote application activity by user.")
+    public ResponseEntity<List<TransporterActivityItem>> getActivity(@RequestParam(required = false) String snapshotId)
+            throws Exception {
+        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(getUser(), snapshotId));
+    }
+
 
     private UserI getUser() {
         return XDAT.getUserDetails();

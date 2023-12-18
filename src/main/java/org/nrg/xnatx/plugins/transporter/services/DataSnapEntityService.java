@@ -1,24 +1,32 @@
 package org.nrg.xnatx.plugins.transporter.services;
 
 import org.nrg.framework.exceptions.NotFoundException;
+import org.nrg.framework.orm.hibernate.BaseHibernateService;
+import org.nrg.xnatx.plugins.transporter.entities.DataSnapEntity;
+import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public interface DataSnapEntityService {
-    DataSnap addDataSnap(String owner, DataSnap dataSnap);
+public interface DataSnapEntityService extends BaseHibernateService<DataSnapEntity> {
 
-    DataSnap getDataSnap(String owner, Long id) throws NotFoundException;
+    DataSnap createDataSnap(String ownerLogin, DataSnap dataSnap);
 
-    DataSnap getDataSnap(String owner, String label) throws NotFoundException;
+    DataSnap addUser(DataSnap dataSnap, String userLogin, SnapUserEntity.Role role) throws NotFoundException;
 
-    List<DataSnap> getDataSnaps(String owner);
+    DataSnap getDataSnap(Long id) throws NotFoundException;
 
-    void deleteDataSnap(String login, Long id) throws NotFoundException, UnauthorizedException;
+    DataSnap getDataSnap(String label) throws NotFoundException;
 
-    void deleteDataSnaps(@Nonnull String owner) throws UnauthorizedException;
+    List<DataSnap> getDataSnaps(String userLogin);
 
-    void updateDataSnap(String login, DataSnap resolveDataSnap) throws NotFoundException;
+    List<DataSnap> getDataSnapsByOwner(String ownerLogin);
+
+    void deleteDataSnap(Long id) throws NotFoundException, UnauthorizedException;
+
+    void updateDataSnap(DataSnap resolveDataSnap) throws NotFoundException;
+
+    void removeUser(DataSnap dataSnap, String userLogin) throws NotFoundException;
 }

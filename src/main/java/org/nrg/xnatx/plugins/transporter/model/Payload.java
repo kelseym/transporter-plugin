@@ -15,7 +15,7 @@ import java.util.List;
 public class Payload {
 
     private Long id;
-    private Long dataSnapId;
+    private Long snapshotId;
     private String label;
     private String description;
     private List<FileManifest> fileManifests;

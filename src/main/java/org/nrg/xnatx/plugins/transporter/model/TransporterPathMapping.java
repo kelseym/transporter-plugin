@@ -7,11 +7,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransporterPathMapping {
+public class TransporterPathMapping implements Serializable {
 
     static String DEFAULT_XNAT_ROOT_PATH = "/data/xnat";
     static String DEFAULT_HOST_ROOT_PATH = "/data/xnat";

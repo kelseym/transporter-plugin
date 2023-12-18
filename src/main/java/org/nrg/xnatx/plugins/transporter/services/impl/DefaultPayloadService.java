@@ -2,7 +2,6 @@ package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.model.SnapItem;
@@ -36,20 +35,11 @@ public class DefaultPayloadService implements PayloadService {
         this.transporterConfigService = transporterConfigService;
     }
 
-    @Override
-    public Payload createPayload(@Nonnull String username, String snapId) throws Exception {
-        DataSnap dataSnap = dataSnapEntityService.getDataSnap(username, Long.parseLong(snapId));
-        if (dataSnap != null) {
-            dataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
-            return createPayload(dataSnap, Payload.Type.DIRECTORY);
-        }
-        throw new NotFoundException("No data snap found for user " + username + " with id " + snapId);
-    }
 
     // Build a payload object from the DataSnap
     @Override
     public Payload createPayload(@Nonnull DataSnap dataSnap, Payload.Type payloadType) throws Exception {
-        return Payload.builder().dataSnapId(dataSnap.getId())
+        return Payload.builder().snapshotId(dataSnap.getId())
                 .label(dataSnap.getLabel())
                 .description(dataSnap.getDescription())
                 .type(payloadType)
