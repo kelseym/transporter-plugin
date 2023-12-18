@@ -10,9 +10,9 @@ Transporter functionality is implemented across two components: the [XNAT Plugin
 
 Snapshot creation is currently supported via [python script](https://github.com/kelseym/transporter-plugin/tree/main/snapshot-container) and the Docker container (`xnat/data-snapshot:0.1`).
 
-## Alpha Version Plugin 
+## Beta Version Plugin 
 * This plugin is built on XNAT version 1.8.9.x
-* This plugin is in Alpha release and is subject to breaking changes without notice.
+* This plugin is in Beta release and is subject to breaking changes without notice.
 * Building the plugin relies on Maven Central as well as a Maven repository hosted by the XNAT team
 
 
@@ -61,4 +61,4 @@ where `xnatRootPath` is the path to XNAT_HOME as seen by XNAT and `serverRootPat
 
 ## Transporter Usage
 
-`scp -P 2222 -rp -O  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null username@host_url:snapshot_lable /destination/folder`
+`scp -P 2222 -rp -O username@host_url:snapshot_label /destination/folder`
