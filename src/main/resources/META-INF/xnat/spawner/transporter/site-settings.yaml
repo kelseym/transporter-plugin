@@ -46,18 +46,22 @@ transporterRemoteStatusPanel:
     formattedTimestamp: Last Update
 
 transporterActivityTable:
-  kind: panel.dataTable
-  name : transporterActivityTable
+  kind: panel
+  name : transporterActivity
   label: Site-wide Transporter Activity
-  load: /xapi/transporter/activity
-  sortable: true
-  items:
-    uuid: ~!
-    sessionId: Session ID
-    username: User
-    snapshotId: Snapshot ID
-    event: Event
-    formattedTimestamp: Timestamp
+  contents:
+    transporterActivityDescription:
+      tag: div.message
+      contents:
+        "The Transporter Activity panel displays all Transporter activity across the site."
+    transporterActivityTable:
+      tag: "div#transporter-activity-table"
+    transporterActivityScript:
+      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-admin.js"
+    renderTransporterActivityTable:
+      tag: script
+      content: >
+        XNAT.plugin.transporter.activity.init('transporter-activity-table');    
 
 
 #################################################

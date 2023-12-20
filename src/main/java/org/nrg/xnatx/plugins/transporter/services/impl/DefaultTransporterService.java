@@ -1,5 +1,6 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
@@ -215,7 +216,9 @@ public class DefaultTransporterService implements TransporterService {
 
     @Override
     public List<TransporterActivityItem> getRemoteApplicationActivity(UserI user, String snapshotId) {
-        return transporterActivityService.getRemoteApplicationActivity(user, snapshotId);
+        List<TransporterActivityItem> remoteApplicationActivity =
+                transporterActivityService.getRemoteApplicationActivity(user, snapshotId);
+        return remoteApplicationActivity != null ? remoteApplicationActivity : Lists.newArrayList();
     }
 
 

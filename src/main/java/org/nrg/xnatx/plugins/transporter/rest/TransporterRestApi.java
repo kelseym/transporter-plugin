@@ -216,14 +216,20 @@ public class TransporterRestApi extends AbstractXapiRestController {
         return ResponseEntity.ok().build();
     }
 
-    // REST endpoint to get remote application transfer activity
-    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = GET)
-    @ApiOperation(value = "Get remote application activity by user.")
-    public ResponseEntity<List<TransporterActivityItem>> getActivity(@RequestParam(required = false) String snapshotId)
-            throws Exception {
-        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(getUser(), snapshotId));
-    }
+//    // REST endpoint to get remote application transfer activity
+//    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = GET)
+//    @ApiOperation(value = "Get remote application activity by user.")
+//    public ResponseEntity<List<TransporterActivityItem>> getActivity(@RequestParam(required = false) String snapshotId)
+//            throws Exception {
+//        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(getUser(), snapshotId));
+//    }
 
+    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/activity"}, method = GET)
+    @ApiOperation(value = "Get all remote application activity.")
+    public ResponseEntity<List<TransporterActivityItem>> getAllActivity(@RequestParam(required = false) String snapshotId)
+            throws Exception {
+        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(null, snapshotId));
+    }
 
     private UserI getUser() {
         return XDAT.getUserDetails();
