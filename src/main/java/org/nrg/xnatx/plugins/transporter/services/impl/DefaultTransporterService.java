@@ -1,5 +1,6 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
@@ -8,13 +9,14 @@ import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
-import org.nrg.xnatx.plugins.transporter.model.TransporterActivityItem;
+import org.nrg.xnatx.plugins.transporter.model.TransportActivity;
 import org.nrg.xnatx.plugins.transporter.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,7 +32,7 @@ public class DefaultTransporterService implements TransporterService {
     private final DataSnapResolutionService dataSnapResolutionService;
     private final DataSnapEntityService dataSnapEntityService;
     private final SnapUserEntityService snapUserEntityService;
-    private final TransporterActivityService transporterActivityService;
+    private final TransportActivityService transportActivityService;
     private final TransporterConfigService transporterConfigService;
     private final PayloadService payloadService;
 
@@ -39,13 +41,13 @@ public class DefaultTransporterService implements TransporterService {
     public DefaultTransporterService(final DataSnapResolutionService dataSnapResolutionService,
                                      final DataSnapEntityService dataSnapEntityService,
                                      final SnapUserEntityService snapUserEntityService,
-                                     final TransporterActivityService transporterActivityService,
+                                     final TransportActivityService transportActivityService,
                                      final TransporterConfigService transporterConfigService,
                                      final PayloadService payloadService) {
         this.dataSnapResolutionService = dataSnapResolutionService;
         this.dataSnapEntityService = dataSnapEntityService;
         this.snapUserEntityService = snapUserEntityService;
-        this.transporterActivityService = transporterActivityService;
+        this.transportActivityService = transportActivityService;
         this.transporterConfigService = transporterConfigService;
         this.payloadService = payloadService;
     }
@@ -53,7 +55,7 @@ public class DefaultTransporterService implements TransporterService {
 
     @Override
     public List<DataSnap> getDataSnaps(UserI user) {
-        return dataSnapEntityService.getDataSnaps(user.getLogin());
+        return dataSnapEntityService.getDataSnaps(user == null ? null : user.getLogin());
     }
 
     @Override
@@ -195,28 +197,34 @@ public class DefaultTransporterService implements TransporterService {
 
     @Override
     public void updateRemoteApplicationStatus(RemoteAppHeartbeat heartbeat) {
-        transporterActivityService.updateRemoteApplicationStatus(heartbeat);
+        transportActivityService.updateRemoteApplicationStatus(heartbeat);
     }
 
     @Override
     public List<RemoteAppHeartbeat> getRemoteApplicationStatus() {
-        return transporterActivityService.getRemoteApplicationStatus();
+        return transportActivityService.getRemoteApplicationStatus();
     }
 
     @Override
     public RemoteAppHeartbeat getRemoteApplicationStatus(String remoteAppId) {
-        return transporterActivityService.getRemoteApplicationStatus(remoteAppId);
+        return transportActivityService.getRemoteApplicationStatus(remoteAppId);
     }
 
     @Override
-    public void updateRemoteApplicationActivity(TransporterActivityItem transporterActivityItem) {
-        transporterActivityService.updateRemoteApplicationActivity(transporterActivityItem);
+    public void updateRemoteApplicationActivity(TransportActivity.TransportActivityMessage activityMessage) {
+        transportActivityService.updateRemoteApplicationActivity(activityMessage);
     }
 
     @Override
-    public List<TransporterActivityItem> getRemoteApplicationActivity(UserI user, String snapshotId) {
-        return transporterActivityService.getRemoteApplicationActivity(user, snapshotId);
+    public List<TransportActivity> getRemoteApplicationActivity(String transportSessionId, UserI user, String snapshotId) {
+        List<TransportActivity> remoteApplicationActivity =
+                transportActivityService.getRemoteApplicationActivity(transportSessionId, user, snapshotId);
+        return remoteApplicationActivity != null ? remoteApplicationActivity : Collections.emptyList();
     }
 
+    @Override
+    public void deleteRemoteApplicationActivity(String transportSessionId) {
+        transportActivityService.deleteRemoteApplicationActivity(transportSessionId);
+    }
 
 }

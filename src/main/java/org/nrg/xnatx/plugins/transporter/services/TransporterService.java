@@ -2,12 +2,11 @@ package org.nrg.xnatx.plugins.transporter.services;
 
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
-import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
-import org.nrg.xnatx.plugins.transporter.model.TransporterActivityItem;
+import org.nrg.xnatx.plugins.transporter.model.TransportActivity;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -44,9 +43,11 @@ public interface TransporterService {
 
     RemoteAppHeartbeat getRemoteApplicationStatus(String remoteAppId);
 
-    void updateRemoteApplicationActivity(TransporterActivityItem transporterActivityItem);
+    void updateRemoteApplicationActivity(TransportActivity.TransportActivityMessage activityMessage);
 
     void updateRemoteApplicationStatus(RemoteAppHeartbeat heartbeat);
 
-    List<TransporterActivityItem> getRemoteApplicationActivity(UserI user, String snapshotId);
+    List<TransportActivity> getRemoteApplicationActivity(String transportSessionId, UserI user, String snapshotId);
+
+    void deleteRemoteApplicationActivity(String sessionId);
 }

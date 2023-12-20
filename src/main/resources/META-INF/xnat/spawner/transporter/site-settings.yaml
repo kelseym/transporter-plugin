@@ -45,19 +45,42 @@ transporterRemoteStatusPanel:
     formattedUptime: Uptime
     formattedTimestamp: Last Update
 
-transporterActivityTable:
-  kind: panel.dataTable
-  name : transporterActivityTable
+transporterActivityPanel:
+  kind: panel
+  name : transporterActivity
   label: Site-wide Transporter Activity
-  load: /xapi/transporter/activity
-  sortable: true
-  items:
-    uuid: ~!
-    sessionId: Session ID
-    username: User
-    snapshotId: Snapshot ID
-    event: Event
-    formattedTimestamp: Timestamp
+  contents:
+    transporterActivityDescription:
+      tag: div.message
+      contents:
+        "The Transporter Activity panel displays all Transporter activity across the site."
+    transporterActivityTable:
+      tag: "div#transporter-activity-table"
+    transporterActivityScript:
+      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-activity-admin.js"
+    renderTransporterActivityTable:
+      tag: script
+      content: >
+        XNAT.plugin.transporter.activity.init('transporter-activity-table');    
+
+snapshotPanel:
+  kind: panel
+  name : snapshots
+  label: Site-wide Snapshots
+  contents:
+    snapshotDescription:
+      tag: div.message
+      contents:
+        "All snapshots across the site."
+    snapshotTable:
+      tag: "div#transporter-snapshot-table"
+    snapshotScript:
+      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-snapshot-admin.js"
+    renderSnapshotTable:
+      tag: script
+      content: >
+        XNAT.plugin.transporter.snapshot.init('transporter-snapshot-table');
+
 
 
 #################################################
@@ -73,14 +96,14 @@ siteSettings:
       transporterTabGroup: Transporter
   contains: tabs
   tabs:
-    transporterRemoteStatusTab:
+    snapshotTab:
       kind: tab
-      name: transporterRemoteStatusTab
-      label: Remote App Status
+      name: snapshotTab
+      label: Snapshots
       group: transporterTabGroup
       active: true
       contents:
-        ${transporterRemoteStatusPanel}
+        ${snapshotPanel}
     transporterActivityTab:
       kind: tab
       name: transporterActivityTab
@@ -88,7 +111,15 @@ siteSettings:
       group: transporterTabGroup
       active: false
       contents:
-        ${transporterActivityTable}
+        ${transporterActivityPanel}
+    transporterRemoteStatusTab:
+      kind: tab
+      name: transporterRemoteStatusTab
+      label: Remote App Status
+      group: transporterTabGroup
+      active: false
+      contents:
+        ${transporterRemoteStatusPanel}
     transporterConfigTab:
       kind: tab
       name: transporterConfigTab
