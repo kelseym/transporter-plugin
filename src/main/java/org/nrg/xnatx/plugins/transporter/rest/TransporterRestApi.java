@@ -10,7 +10,9 @@ import org.nrg.xapi.rest.AbstractXapiRestController;
 import org.nrg.xapi.rest.XapiRequestMapping;
 import org.nrg.xdat.XDAT;
 import org.nrg.xdat.security.helpers.AccessLevel;
+import org.nrg.xdat.security.helpers.UserHelper;
 import org.nrg.xdat.security.services.RoleHolder;
+import org.nrg.xdat.security.services.UserHelperServiceI;
 import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
@@ -91,7 +93,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     @ApiOperation(value = "Get available snapshots.")
     @ResponseBody
     public List<DataSnap> getSnaps() {
-        return transporterService.getDataSnaps(getUser());
+        return transporterService.getDataSnaps(isAdmin(getUser()) ? null : getUser());
     }
 
     // REST Endpoint to GET a particular snapshot for a given user
@@ -235,4 +237,20 @@ public class TransporterRestApi extends AbstractXapiRestController {
         return XDAT.getUserDetails();
     }
 
+    private boolean isAdmin(final UserI user) {
+        return getRoleHolder().isSiteAdmin(user);
+    }
+
+    private boolean isOwner(final UserI user, final List<String> projectIds) {
+        if (projectIds == null || projectIds.isEmpty()) {
+            return false;
+        }
+        final UserHelperServiceI userHelperService = UserHelper.getUserHelperService(user);
+        for (String pid : projectIds) {
+            if (!userHelperService.isOwner(pid)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

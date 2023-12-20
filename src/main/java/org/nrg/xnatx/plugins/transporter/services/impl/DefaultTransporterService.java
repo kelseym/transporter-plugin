@@ -54,7 +54,7 @@ public class DefaultTransporterService implements TransporterService {
 
     @Override
     public List<DataSnap> getDataSnaps(UserI user) {
-        return dataSnapEntityService.getDataSnaps(user.getLogin());
+        return dataSnapEntityService.getDataSnaps(user == null ? null : user.getLogin());
     }
 
     @Override

@@ -45,7 +45,7 @@ transporterRemoteStatusPanel:
     formattedUptime: Uptime
     formattedTimestamp: Last Update
 
-transporterActivityTable:
+transporterActivityPanel:
   kind: panel
   name : transporterActivity
   label: Site-wide Transporter Activity
@@ -57,11 +57,30 @@ transporterActivityTable:
     transporterActivityTable:
       tag: "div#transporter-activity-table"
     transporterActivityScript:
-      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-admin.js"
+      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-activity-admin.js"
     renderTransporterActivityTable:
       tag: script
       content: >
         XNAT.plugin.transporter.activity.init('transporter-activity-table');    
+
+snapshotPanel:
+  kind: panel
+  name : snapshots
+  label: Site-wide Snapshots
+  contents:
+    snapshotDescription:
+      tag: div.message
+      contents:
+        "All snapshots across the site."
+    snapshotTable:
+      tag: "div#transporter-snapshot-table"
+    snapshotScript:
+      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-snapshot-admin.js"
+    renderSnapshotTable:
+      tag: script
+      content: >
+        XNAT.plugin.transporter.snapshots.init('transporter-snapshot-table');
+
 
 
 #################################################
@@ -77,12 +96,20 @@ siteSettings:
       transporterTabGroup: Transporter
   contains: tabs
   tabs:
+    snapshotTab:
+      kind: tab
+      name: snapshotTab
+      label: Snapshots
+      group: transporterTabGroup
+      active: true
+      contents:
+        ${snapshotPanel}
     transporterRemoteStatusTab:
       kind: tab
       name: transporterRemoteStatusTab
       label: Remote App Status
       group: transporterTabGroup
-      active: true
+      active: false
       contents:
         ${transporterRemoteStatusPanel}
     transporterActivityTab:
@@ -92,7 +119,7 @@ siteSettings:
       group: transporterTabGroup
       active: false
       contents:
-        ${transporterActivityTable}
+        ${transporterActivityPanel}
     transporterConfigTab:
       kind: tab
       name: transporterConfigTab

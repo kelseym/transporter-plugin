@@ -2,7 +2,7 @@
  * Transporter admin functions
  */
 
-console.debug('transporter-admin.js');
+console.debug('transporter-activity-admin.js');
 
 var XNAT = getObject(XNAT || {});
 XNAT.plugin = getObject(XNAT.plugin || {});
@@ -29,7 +29,7 @@ XNAT.plugin.transporter.activity = getObject(XNAT.plugin.transporter.activity ||
     }
 
     XNAT.plugin.transporter.getActivity = XNAT.plugin.transporter.activity.getAll = async function() {
-        console.debug('transporter-admin.js: XNAT.plugin.transporter.activity.getAll');
+        console.debug('transporter-activity-admin.js: XNAT.plugin.transporter.activity.getActivity');
 
         const response = await fetch(restUrl('/xapi/transporter/activity'), {
             method: 'GET',
@@ -45,7 +45,7 @@ XNAT.plugin.transporter.activity = getObject(XNAT.plugin.transporter.activity ||
 
 
     XNAT.plugin.transporter.activity.table = function(activityTableContainerId) {
-        console.debug('transporter-admin.js: XNAT.plugin.transporter.activity.table');
+        console.debug('transporter-activity-admin.js: XNAT.plugin.transporter.activity.table');
 
         // initialize the table
         const activityTable = XNAT.table({
@@ -77,15 +77,13 @@ XNAT.plugin.transporter.activity = getObject(XNAT.plugin.transporter.activity ||
                 let event = item['event'];
                 let timestamp = item['timestamp'];
 
-                if (hasServer) {
-                    noActivity = false;
-                    activityTable.tr()
-                              .td([spawn('div.left', [sessionId])])
-                              .td([spawn('div.center', [username])])
-                              .td([spawn('div.center', [snapshotId])])
-                              .td([spawn('div.center', [event])])
-                              .td([spawn('div.center', [timestamp.toLocaleString()])]);
-                }
+                noActivity = false;
+                activityTable.tr()
+                          .td([spawn('div.left', [sessionId])])
+                          .td([spawn('div.center', [username])])
+                          .td([spawn('div.center', [snapshotId])])
+                          .td([spawn('div.center', [event])])
+                          .td([spawn('div.center', [timestamp.toLocaleString()])]);
             })
             
             if (noActivity) {
@@ -111,7 +109,7 @@ XNAT.plugin.transporter.activity = getObject(XNAT.plugin.transporter.activity ||
     }
 
     XNAT.plugin.transporter.activity.refresh = function(activityTableContainerId) {
-        console.debug('transporter-admin.js: XNAT.plugin.transporter.activity.refresh');
+        console.debug('transporter-activity-admin.js: XNAT.plugin.transporter.activity.refresh');
 
         // Create activity table
         let activityTable = XNAT.plugin.transporter.activity.table(activityTableContainerId)
@@ -125,7 +123,7 @@ XNAT.plugin.transporter.activity = getObject(XNAT.plugin.transporter.activity ||
     }
 
     XNAT.plugin.transporter.activity.init = function(activityTableContainerId = 'transporter-activity-table') {
-        console.debug('transporter-admin.js: XNAT.plugin.transporter.activity.init');
+        console.debug('transporter-activity-admin.js: XNAT.plugin.transporter.activity.init');
 
         let containerEl = document.getElementById(activityTableContainerId);
         let footerEl = containerEl.parentElement.parentElement.querySelector(".panel-footer")

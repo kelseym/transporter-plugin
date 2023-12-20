@@ -1,6 +1,7 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.framework.orm.hibernate.AbstractHibernateEntityService;
@@ -80,7 +81,9 @@ public class DefaultDataSnapEntityService extends AbstractHibernateEntityService
 
     @Override
     public List<DataSnap> getDataSnaps(String userLogin) {
-        return toPojo(snapUserEntityService.getDataSnaps(userLogin), false);
+        return Strings.isNullOrEmpty(userLogin) ?
+                toPojo(getAll(), false) :
+                toPojo(snapUserEntityService.getDataSnaps(userLogin), false);
     }
 
     @Override

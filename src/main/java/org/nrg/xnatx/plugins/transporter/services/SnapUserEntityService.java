@@ -10,6 +10,7 @@ import static org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity.Role;
 public interface SnapUserEntityService extends BaseHibernateService<SnapUserEntity> {
 
     SnapUserEntity create(SnapUserEntity entity);
+
     List<DataSnapEntity> getDataSnaps(String login);
 
     List<DataSnapEntity> getDataSnapsByOwner(String login);
