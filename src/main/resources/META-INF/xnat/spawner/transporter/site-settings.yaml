@@ -79,7 +79,7 @@ snapshotPanel:
     renderSnapshotTable:
       tag: script
       content: >
-        XNAT.plugin.transporter.snapshots.init('transporter-snapshot-table');
+        XNAT.plugin.transporter.snapshot.init('transporter-snapshot-table');
 
 
 
@@ -104,14 +104,6 @@ siteSettings:
       active: true
       contents:
         ${snapshotPanel}
-    transporterRemoteStatusTab:
-      kind: tab
-      name: transporterRemoteStatusTab
-      label: Remote App Status
-      group: transporterTabGroup
-      active: false
-      contents:
-        ${transporterRemoteStatusPanel}
     transporterActivityTab:
       kind: tab
       name: transporterActivityTab
@@ -120,6 +112,14 @@ siteSettings:
       active: false
       contents:
         ${transporterActivityPanel}
+    transporterRemoteStatusTab:
+      kind: tab
+      name: transporterRemoteStatusTab
+      label: Remote App Status
+      group: transporterTabGroup
+      active: false
+      contents:
+        ${transporterRemoteStatusPanel}
     transporterConfigTab:
       kind: tab
       name: transporterConfigTab
