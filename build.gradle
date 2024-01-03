@@ -2,9 +2,9 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.bundling.Jar
 
 /*
- * xnat-transporter-plugin: build.gradle
+ * transporter-plugin: build.gradle
  * XNAT https://www.xnat.org
- * Copyright (c) 2005-2021, Washington University School of Medicine
+ * Copyright (c) 2005-2024, Washington University School of Medicine
  * All Rights Reserved
  *
  * Released under the Simplified BSD.
@@ -37,15 +37,10 @@ repositories {
     maven { url "https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot" }
     mavenCentral()
 }
-
-// TODO: This defines a dependency package, specifically the XNAT NRG parent pom, which specifies
-//       versions for all of XNAT's dependencies. This helps ensure that plugins are building
-//       against the same versions of various libraries as XNAT itself.
 dependencyManagement.imports {
     mavenBom "org.nrg:parent:1.8.6"
 }
 
-// TODO: This is a pretty minimal set of dependencies, so don't worry if you need to add more.
 dependencies {
     implementation platform("org.nrg:parent:${vXnat}")
 
@@ -95,10 +90,6 @@ jacocoTestReport {
 }
 
 java {
-    // TODO: As of the 1.8.x release, XNAT is built as a Java 8-compatible (i.e. JDK 1.8)
-    //       application. All plugins must be 1.8 compatible as well. This does NOT mean
-    //       the code must be compiled with Java 8, just that the compiled byte code must
-    //       be compatible with running in a Java 8 environment.
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }

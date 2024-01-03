@@ -1,0 +1,61 @@
+{
+    "id": 1234,
+    "label": "SimpleSnapName",
+    "description": "Simple Snap Description.",
+    "content": [
+        {
+            "id": "XNAT_S00002",
+            "label": "Patient_007382",
+            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002",
+            "children": [
+                {
+                    "id": "XNAT_E00002",
+                    "label": "Patient_007382",
+                    "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002",
+                    "children": [
+                        {
+                            "id": "4",
+                            "label": "",
+                            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4",
+                            "children": [
+                                {
+                                    "id": "3",
+                                    "label": "DICOM",
+                                    "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4/resources/DICOM",
+                                    "children": [
+                                        {
+                                            "id": "1.MR.head_DHead.4.14.20061214.091206.156000.0554818030.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4/resources/3/files/1.MR.head_DHead.4.14.20061214.091206.156000.0554818030.dcm",
+                                            "children": [],
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "path": "SIMPLE_PROJECT_ID/arc001/Patient_007382/SCANS/4/DICOM/1.MR.head_DHead.4.14.20061214.091206.156000.0554818030.dcm"
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.88.20061214.091206.156000.6805818328.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4/resources/3/files/1.MR.head_DHead.4.88.20061214.091206.156000.6805818328.dcm",
+                                            "children": [],
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "path": "SIMPLE_PROJECT_ID/arc001/Patient_007382/SCANS/4/DICOM/1.MR.head_DHead.4.88.20061214.091206.156000.6805818328.dcm"
+                                        }
+                                    ],
+                                    "xnat-type": "RESOURCE",
+                                    "path": "SIMPLE_PROJECT_ID/arc001/Patient_007382/SCANS/4/DICOM"
+                                }
+                            ],
+                            "xnat-type": "SCAN"
+                        }
+                    ],
+                    "xnat-type": "SESSION"
+                }
+            ],
+            "xnat-type": "SUBJECT"
+        }
+    ],
+    "root-path": "/data/xnat/snapshots/snap_3903cf66-2458-4b9f-8986-b84e6cc01811",
+    "path-root-key": "SIMPLE_PROJECT_ID",
+    "build-state": "MIRRORED"
+}

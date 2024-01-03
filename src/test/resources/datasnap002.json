@@ -1,0 +1,119 @@
+{
+    "label": "SampleSnap",
+    "description": "This is a long description of a snapshot that will force the display to multiple lines.",
+    "path-root-key": "ABCT",
+    "content": [
+        {
+            "id": "XNAT_S00001",
+            "label": "Patient_007382",
+            "xnat-type": "SUBJECT",
+            "uri": "/data/projects/ABCT/subjects/XNAT_S00001",
+            "children": [
+                {
+                    "id": "XNAT_E00001",
+                    "label": "Patient_007382",
+                    "xnat-type": "SESSION",
+                    "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001",
+                    "children": [
+                        {
+                            "id": "4",
+                            "label": "",
+                            "xnat-type": "SCAN",
+                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4",
+                            "children": [
+                                {
+                                    "id": "2",
+                                    "label": "DICOM",
+                                    "xnat-type": "RESOURCE",
+                                    "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/DICOM",
+                                    "children": [
+                                        {
+                                            "id": "1.MR.head_DHead.4.166.20061214.091206.156000.4646918584.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.166.20061214.091206.156000.4646918584.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.34.20061214.091206.156000.2145718111.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.34.20061214.091206.156000.2145718111.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.73.20061214.091206.156000.9268618263.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.73.20061214.091206.156000.9268618263.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.143.20061214.091206.156000.2996218538.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.143.20061214.091206.156000.2996218538.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.102.20061214.091206.156000.6488818382.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.102.20061214.091206.156000.6488818382.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.44.20061214.091206.156000.7005218149.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.44.20061214.091206.156000.7005218149.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.69.20061214.091206.156000.9849818251.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.69.20061214.091206.156000.9849818251.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.97.20061214.091206.156000.4354818364.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.97.20061214.091206.156000.4354818364.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.35.20061214.091206.156000.7236218113.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.35.20061214.091206.156000.7236218113.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "1.MR.head_DHead.4.11.20061214.091206.156000.8007818018.dcm",
+                                            "label": "",
+                                            "uri": "/data/projects/ABCT/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.11.20061214.091206.156000.8007818018.dcm",
+                                            "file-type": "FILE",
+                                            "xnat-type": "FILE",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

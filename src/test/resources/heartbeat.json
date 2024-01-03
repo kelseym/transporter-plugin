@@ -1,0 +1,10 @@
+{
+  "status": "Active",
+  "remoteAppId": "xyz123",
+  "remoteHost": "remote.example.com",
+  "xnatHost": "xnat.example.com",
+  "xnatConnectionStatus": "Connected",
+  "message": "Heartbeat received",
+  "timestamp": "2023-01-01T12:00",
+  "uptime": 123456789
+}

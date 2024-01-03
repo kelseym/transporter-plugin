@@ -60,8 +60,8 @@ public class TransporterRestApi extends AbstractXapiRestController {
     }
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/datasnap"}, method = POST, consumes = JSON)
-    @ApiOperation(value = "Accepts and processes a DataSnap.")
-    public ResponseEntity<String> postSnap(final @RequestBody DataSnap dataSnap,
+    @ApiOperation(value = "Accepts and processes a DataSnap before adding it to the database")
+    public ResponseEntity<String> addSnap(final @RequestBody DataSnap dataSnap,
                                            @RequestParam(required = false, defaultValue = "true") boolean resolve) throws Exception {
         Optional<DataSnap> result = transporterService.storeDataSnap(getUser(), dataSnap, resolve);
         if (result.isPresent()) {
@@ -73,7 +73,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
 
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}/reader"}, method = POST)
     @ApiOperation(value = "Add a reader to a DataSnap. Restricted to DataSnap owner.")
-    public ResponseEntity<DataSnap> addReader(final @PathVariable String id,
+    public ResponseEntity<DataSnap> addSnapReader(final @PathVariable String id,
                                              @RequestParam(required = true) String userLogin) throws Exception {
         DataSnap dataSnap = transporterService.addDataSnapReader(getUser(), id, userLogin);
         return ResponseEntity.ok(dataSnap);
@@ -81,7 +81,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
 
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}/editor"}, method = POST)
     @ApiOperation(value = "Add a editor to a DataSnap. Restricted to DataSnap owner.")
-    public ResponseEntity<DataSnap> addEditor(final @PathVariable String id,
+    public ResponseEntity<DataSnap> addSnapEditor(final @PathVariable String id,
                                               @RequestParam(required = true) String userLogin) throws Exception {
         DataSnap dataSnap = transporterService.addDataSnapEditor(getUser(), id, userLogin);
         return ResponseEntity.ok(dataSnap);
@@ -106,7 +106,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     // REST Endpoint to DELETE a particular snapshot for a given user
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}"}, method = DELETE)
     @ApiOperation(value = "Delete snapshot.")
-    public ResponseEntity<Void> delete(final @PathVariable String id) throws NotFoundException, UnauthorizedException {
+    public ResponseEntity<Void> deleteSnap(final @PathVariable String id) throws NotFoundException, UnauthorizedException {
         transporterService.deleteDataSnap(getUser(), String.valueOf(id));
         return ResponseEntity.noContent().build();
     }
@@ -130,16 +130,6 @@ public class TransporterRestApi extends AbstractXapiRestController {
 
         return ResponseEntity.ok(transporterService.getAvailablePayloads(getUser()));
     }
-
-    //// REST Endpoint to set transporter path mapping
-    //@XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST)
-    //@ApiOperation(value = "Set transporter path mapping.")
-    //public ResponseEntity setMapping(@RequestParam final String xnatRootPath,
-    //                                 @RequestParam final String serverRootPath)
-    //        throws ConfigServiceException, JsonProcessingException {
-    //    transporterConfigService.setTransporterPathMapping(getUser().getLogin(), null, xnatRootPath, serverRootPath);
-    //    return ResponseEntity.ok().build();
-    //}
 
     // REST Endpoint to set transporter path mapping
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/path-mapping"}, method = POST, consumes = JSON)
