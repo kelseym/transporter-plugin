@@ -69,7 +69,6 @@ public class TransporterRestTest {
     public void setup() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).apply(springSecurity()).build();
 
-
         // Mock the userI
         final UserI admin = mock(UserI.class);
         final String adminUsername = "admin";
