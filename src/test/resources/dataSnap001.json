@@ -1,43 +1,44 @@
 {
-    "label": "DefaultName",
-    "description": "DefaultDescription",
+    "label": "SimpleSnapName",
+    "description": "Simple Snap Description.",
+    "path-root-key": "SIMPLE_PROJECT_ID",
     "content": [
         {
-            "id": "XNAT_S00001",
+            "id": "XNAT_S00002",
             "label": "Patient_007382",
             "xnat-type": "SUBJECT",
-            "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001",
+            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002",
             "children": [
                 {
-                    "id": "XNAT_E00001",
+                    "id": "XNAT_E00002",
                     "label": "Patient_007382",
                     "xnat-type": "SESSION",
-                    "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001",
+                    "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002",
                     "children": [
                         {
                             "id": "4",
                             "label": "",
                             "xnat-type": "SCAN",
-                            "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4",
+                            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4",
                             "children": [
                                 {
-                                    "id": "2",
+                                    "id": "3",
                                     "label": "DICOM",
                                     "xnat-type": "RESOURCE",
-                                    "uri": "/data/archive/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/DICOM",
+                                    "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4/resources/DICOM",
                                     "children": [
                                         {
-                                            "id": "1.MR.head_DHead.4.147.20061214.091206.156000.2920518546.dcm",
+                                            "id": "1.MR.head_DHead.4.14.20061214.091206.156000.0554818030.dcm",
                                             "label": "",
-                                            "uri": "/data/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.147.20061214.091206.156000.2920518546.dcm",
+                                            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4/resources/3/files/1.MR.head_DHead.4.14.20061214.091206.156000.0554818030.dcm",
                                             "file-type": "FILE",
                                             "xnat-type": "FILE",
                                             "children": []
                                         },
                                         {
-                                            "id": "1.MR.head_DHead.4.123.20061214.091206.156000.0164918466.dcm",
+                                            "id": "1.MR.head_DHead.4.88.20061214.091206.156000.6805818328.dcm",
                                             "label": "",
-                                            "uri": "/data/projects/TEST/subjects/XNAT_S00001/experiments/XNAT_E00001/scans/4/resources/2/files/1.MR.head_DHead.4.123.20061214.091206.156000.0164918466.dcm",
+                                            "uri": "/data/projects/SIMPLE_PROJECT_ID/subjects/XNAT_S00002/experiments/XNAT_E00002/scans/4/resources/3/files/1.MR.head_DHead.4.88.20061214.091206.156000.6805818328.dcm",
                                             "file-type": "FILE",
                                             "xnat-type": "FILE",
                                             "children": []
@@ -52,4 +53,3 @@
         }
     ]
 }
-

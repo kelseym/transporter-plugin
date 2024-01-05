@@ -46,12 +46,6 @@ public class DataSnap implements Serializable {
         FAILED
     }
 
-    //// TODO: Support filtering by item type, e.g. stream only resources, etc.
-    //@JsonIgnore
-    //public Stream<SnapItem> streamSnapItems() {
-    //    return content.stream().flatMap(SnapItem::flatten);
-    //}
-
     @JsonIgnore
     public Stream<SnapItem> streamSnapItems(SnapItem.XnatType... xnatTypes) {
         return content.stream().flatMap(si -> si.flatten(xnatTypes));
