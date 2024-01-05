@@ -76,18 +76,6 @@ public class TransportActivity implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder(toBuilder = true)
-    public static class TransporterActivityItemCreator implements Serializable {
-        private String username;
-        private String snapshotId;
-        private String sessionId;
-        private String event;
-        private LocalDateTime timestamp;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder(toBuilder = true)
     public static class TransportActivityMessage implements Serializable {
         private String username;
         private String snapshotId;
