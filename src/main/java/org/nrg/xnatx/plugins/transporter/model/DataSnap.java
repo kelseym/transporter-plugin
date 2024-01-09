@@ -56,6 +56,11 @@ public class DataSnap implements Serializable {
     }
 
     @JsonIgnore
+    public Stream<SnapItem> streamSnapItems(SnapItem.FileType fileType) {
+        return content.stream().flatMap(si -> si.flatten(fileType));
+    }
+
+    @JsonIgnore
     public String absoluteToRelativePath(String absolutePath) {
         return absolutePath.startsWith(rootPath) ? absolutePath : absolutePath.replaceFirst(rootPath, "");
     }

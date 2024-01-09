@@ -33,7 +33,7 @@ def generate_snap_item(subject_or_experiment_or_scan, base_type):
         item["xnat-type"] = "RESOURCE"
         # Replace the trailing ID in these resources uri with its label
         item["uri"] = re.sub(r'(\d+)$', item['label'], item["uri"])
-        if base_type.lower() == "RESOURCE":
+        if base_type.lower() == "resource":
             item["file-type"] = "DIRECTORY"
         elif base_type == "FILE":
             for index, file in enumerate(subject_or_experiment_or_scan.files.values()):

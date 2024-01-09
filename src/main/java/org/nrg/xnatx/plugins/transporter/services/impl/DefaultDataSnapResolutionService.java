@@ -1,6 +1,7 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -34,16 +35,11 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.nrg.xnatx.plugins.transporter.model.DataSnap.BuildState.MIRRORED;
-import static org.nrg.xnatx.plugins.transporter.model.DataSnap.BuildState.RESOLVED;
+import static org.nrg.xnatx.plugins.transporter.model.DataSnap.BuildState.*;
 
 @Slf4j
 @Service
@@ -79,18 +75,45 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                 Strings.isNullOrEmpty(dataSnap.getRootPath()) ?
                         Paths.get("/").toString() : dataSnap.getRootPath());
         TransporterPathMapping transporterPathMapping = transporterConfigService.getTransporterPathMapping();
-        dataSnap.streamSnapItems(SnapItem.XnatType.FILE).forEach(snapItem -> {
+        // Mirror DIRECTORY snap items
+        List<String> mirroredDirRoots = Lists.newArrayList();
+        dataSnap.streamSnapItems(SnapItem.FileType.DIRECTORY).forEach(snapItem -> {
             try {
                 Path sourcePath = originalRootPath.resolve(snapItem.getPath());
                 Path destinationPath = targetPath.resolve(snapItem.getPath());
                 if (Files.exists(destinationPath)) {
+                    dataSnap.setBuildState(FAILED);
                     throw new IOException("Destination path already exists: " + destinationPath.toString());
-                }
-                else {
+                } else if (!Files.isDirectory(sourcePath)) {
+                    dataSnap.setBuildState(FAILED);
+                    throw new IOException("Source directory path is not a directory type: " + sourcePath.toString());
+                } else {
                     Files.createDirectories(destinationPath.getParent());
-                    if (Files.isRegularFile(sourcePath)) {
-                        Files.createSymbolicLink(destinationPath, remapRootDirectory(transporterPathMapping, sourcePath));
-                    }
+                    Files.createSymbolicLink(destinationPath, remapRootDirectory(transporterPathMapping, sourcePath));
+                    mirroredDirRoots.add(destinationPath.toString());
+                }
+            } catch (UncheckedIOException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        // Mirror FILE snap items - fail if destination path already exists as a mirrored directory
+        dataSnap.streamSnapItems(SnapItem.FileType.FILE).forEach(snapItem -> {
+            try {
+                Path sourcePath = originalRootPath.resolve(snapItem.getPath());
+                Path destinationPath = targetPath.resolve(snapItem.getPath());
+                if (Files.exists(destinationPath)) {
+                    dataSnap.setBuildState(FAILED);
+                    throw new IOException("Destination path already exists: " + destinationPath.toString());
+                } else if (!Files.isRegularFile(sourcePath)) {
+                    dataSnap.setBuildState(FAILED);
+                    throw new IOException("Source file path is not a file type: " + sourcePath.toString());
+                } else if (mirroredDirRoots.stream().anyMatch(destinationPath::startsWith)) {
+                    dataSnap.setBuildState(FAILED);
+                    throw new IOException("Mirror file destination path cannot be within a mirrored directory: " + destinationPath.toString());
+                } else {
+                    Files.createDirectories(destinationPath.getParent());
+                    Files.createSymbolicLink(destinationPath, remapRootDirectory(transporterPathMapping, sourcePath));
                 }
             } catch (UncheckedIOException | IOException e) {
                 throw new RuntimeException(e);
