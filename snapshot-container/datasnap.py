@@ -6,11 +6,12 @@ import requests
 import re
 import datetime
 
-def generate_snap_item(subject_or_experiment_or_scan):
+
+def generate_snap_item(subject_or_experiment_or_scan, base_type):
     item = {
         "id": subject_or_experiment_or_scan.id if hasattr(subject_or_experiment_or_scan, 'id') else "",
         "label": subject_or_experiment_or_scan.label if hasattr(subject_or_experiment_or_scan, 'label') else "",
-        "xnat-type" : "",
+        "xnat-type": "",
         "uri": subject_or_experiment_or_scan.uri,
         "children": []
     }
@@ -19,40 +20,42 @@ def generate_snap_item(subject_or_experiment_or_scan):
     if 'session' in subject_or_experiment_or_scan.xpath.lower():
         item["xnat-type"] = "SESSION"
         for scan in subject_or_experiment_or_scan.scans.values():
-            item["children"].append(generate_snap_item(scan))
+            item["children"].append(generate_snap_item(scan, base_type))
     elif 'subject' in subject_or_experiment_or_scan.xpath.lower():
         item["xnat-type"] = "SUBJECT"
         for experiment in subject_or_experiment_or_scan.experiments.values():
-            item["children"].append(generate_snap_item(experiment))
+            item["children"].append(generate_snap_item(experiment, base_type))
     elif 'scan' in subject_or_experiment_or_scan.xpath.lower():
         item["xnat-type"] = "SCAN"
         for resource in subject_or_experiment_or_scan.resources.values():
-            item["children"].append(generate_snap_item(resource))
+            item["children"].append(generate_snap_item(resource, base_type))
     elif 'resource' in subject_or_experiment_or_scan.xpath.lower():
         item["xnat-type"] = "RESOURCE"
-        # Replace the trailing ID in this resources uri with its label
+        # Replace the trailing ID in these resources uri with its label
         item["uri"] = re.sub(r'(\d+)$', item['label'], item["uri"])
-        for index, file in enumerate(subject_or_experiment_or_scan.files.values()):
-            if index >= 10:
-                break
-            item["children"].append({
-                "id": file.id if hasattr(file, 'id') else "",
-                "label": file.id if hasattr(file, 'label') else "",
-                "uri": file.uri,
-                "file-type": "FILE",
-                "xnat-type": "FILE",
-                "children": []
-            })
+        if base_type.lower() == "RESOURCE":
+            item["file-type"] = "DIRECTORY"
+        elif base_type == "FILE":
+            for index, file in enumerate(subject_or_experiment_or_scan.files.values()):
+                item["children"].append({
+                    "id": file.id if hasattr(file, 'id') else "",
+                    "label": file.id if hasattr(file, 'label') else "",
+                    "uri": file.uri,
+                    "file-type": "FILE",
+                    "xnat-type": "FILE",
+                    "children": []
+                })
 
     return item
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python datasnap.py PROJECT_ID")
+    if len(sys.argv) < 2 | len(sys.argv) > 3:
+        print("Usage: python datasnap.py PROJECT_ID BASE_TYPE ([FILE] | RESOURCE)")
         sys.exit(1)
 
     project_id = sys.argv[1]
+    base_type = sys.argv[2] if len(sys.argv) == 3 else "FILE"
 
     # Get environment variables
     datasnap_name = os.environ.get('DATASNAP_NAME', 'DefaultName' + datetime.datetime.now().strftime('%m-%d-%H:%M:%S'))
@@ -61,7 +64,6 @@ if __name__ == "__main__":
     xnat_user = os.environ.get('XNAT_USER', 'admin')
     xnat_pass = os.environ.get('XNAT_PASS', 'admin')
     datasnap_endpoint = xnat_host + "/xapi/transporter/datasnap"
-    datasnap = ""
 
     with xnat.connect(xnat_host, user=xnat_user, password=xnat_pass) as session:
         project = session.projects[project_id]
@@ -69,7 +71,8 @@ if __name__ == "__main__":
             "label": datasnap_name,
             "description": datasnap_desc,
             "path-root-key": project_id,
-            "content": [generate_snap_item(subject) for subject in project.subjects.values()]
+            "base-type" : base_type,
+            "content": [generate_snap_item(subject, base_type) for subject in project.subjects.values()]
         }
 
     print(json.dumps(datasnap, indent=4))
@@ -81,7 +84,8 @@ if __name__ == "__main__":
     }
     params = {'resolve': True}
 
-    response = requests.post(datasnap_endpoint, headers=headers, data=json.dumps(datasnap), auth=(xnat_user, xnat_pass), params=params)
+    response = requests.post(datasnap_endpoint, headers=headers, data=json.dumps(datasnap), auth=(xnat_user, xnat_pass),
+                             params=params)
 
     # Check the response
     if response.status_code == 200:

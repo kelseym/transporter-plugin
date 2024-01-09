@@ -181,14 +181,14 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
             try {
                 ResourceData resourceData = catalogService
                         .getResourceDataFromUri(item.getUri()
-                                .replace("/data/","/archive/").
-                                replace("/archive/archive/", "/archive/"), // TODO: Fix this hack
+                                        .replace("/data/", "/archive/").
+                                        replace("/archive/archive/", "/archive/"), // TODO: Fix this hack
                                 true);
                 final URIManager.ArchiveItemURI resourceUri = resourceData.getXnatUri();
-                final XnatAbstractresourceI xnatAbstractresourceI = ((ResourceURII)resourceUri).getXnatResource();
+                final XnatAbstractresourceI xnatAbstractresourceI = ((ResourceURII) resourceUri).getXnatResource();
                 final XnatResourcecatalog xnatResourcecatalog = (XnatResourcecatalog) xnatAbstractresourceI;
                 File catalogFile = CatalogUtils.getOrCreateCatalogFile(null, xnatResourcecatalog, null);
-                if(catalogFile == null){
+                if (catalogFile == null) {
                     throw new RuntimeException("Could not find catalog file for resource: " + item.getUri());
                 }
                 item.setPath(catalogFile.getParent());
@@ -196,20 +196,23 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                 final Path parentPath = Paths.get(item.getUri() + "/files/");
                 final List<Object[]> entryDetails = CatalogUtils.getEntryDetails(cat, item.getPath(), parentPath.toString(),
                         xnatResourcecatalog, false, null, null, "URI");
-                for (final Object[] entry : entryDetails) {
-                    String uri = (String) entry[2]; // This is the parentUri + relative path to file
-                    String relPath = parentPath.relativize(Paths.get(uri)).toString(); // get that relative path
-                    String filePath = Paths.get(item.getPath()).resolve(relPath).toString(); // append rel path to parent dir
-                    String tagsCsv = (String) entry[4];
-                    String format = (String) entry[5];
-                    String content = (String) entry[5];
-                    String sizeStr = StringUtils.defaultIfBlank((String) entry[1], null);
-                    Long size = sizeStr == null ? null : Long.parseLong(sizeStr);
-                    String checksum = (String) entry[8];
-                    item.getChildren().stream().
-                            filter(f -> SnapItem.XnatType.FILE.equals(f.getXnatType())).
-                            filter(f -> f.getId().equals(relPath)).
-                            forEach(f -> f.setPath(filePath));
+                // Skip this if item.getChildren() is null or empty
+                if (item.getChildren() != null && !item.getChildren().isEmpty()) {
+                    for (final Object[] entry : entryDetails) {
+                        String uri = (String) entry[2]; // This is the parentUri + relative path to file
+                        String relPath = parentPath.relativize(Paths.get(uri)).toString(); // get that relative path
+                        String filePath = Paths.get(item.getPath()).resolve(relPath).toString(); // append rel path to parent dir
+                        String tagsCsv = (String) entry[4];
+                        String format = (String) entry[5];
+                        String content = (String) entry[5];
+                        String sizeStr = StringUtils.defaultIfBlank((String) entry[1], null);
+                        Long size = sizeStr == null ? null : Long.parseLong(sizeStr);
+                        String checksum = (String) entry[8];
+                        item.getChildren().stream().
+                                filter(f -> SnapItem.XnatType.FILE.equals(f.getXnatType())).
+                                filter(f -> f.getId().equals(relPath)).
+                                forEach(f -> f.setPath(filePath));
+                    }
                 }
 
             } catch (RuntimeException | ClientException | ServerException e) {
