@@ -288,6 +288,8 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
         try {
             created = Files.createDirectory(Paths.get(buildDir));
         } catch (IOException e) {
+            log.error("Could not create snapshot directory: " + buildDir);
+            log.error(e.getMessage());
             throw new IOException("Could not create snapshot directory", e);
         }
         created.toFile().setWritable(true);

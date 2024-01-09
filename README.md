@@ -39,12 +39,16 @@ For example, on a host system the XNAT_HOME directory is mapped from `/data/xnat
       - ./xnat-data/home/logs:${XNAT_HOME}/logs
       - ./xnat-data/archive:${XNAT_ROOT}/archive
       - ./xnat-data/build:${XNAT_ROOT}/build
+      - ./xnat-data/snapshots:${XNAT_ROOT}/snapshots
       - ./xnat-data/cache:${XNAT_ROOT}/cache
       - /var/run/docker.sock:/var/run/docker.sock
       - /Users/UserHome/Projects/XNAT/xnat-docker-compose/xnat-data/build:/Users/UserHome/Projects/XNAT/xnat-docker-compose/xnat-data/build
 ```      
+Note the addition of the volume mount `./xnat-data/snapshots:${XNAT_ROOT}/snapshots`. This provides a directory on the host system to store mirrored snapshot data.
 
 The last line in this  block allows the Transporter plugin code to create host-accessible simlinked files and folders with a target under `/Users/UserHome/Projects/XNAT/xnat-docker-compose/xnat-data/build`.
+
+
 
 ***Plugin Path Mapping***
 

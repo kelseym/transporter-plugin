@@ -6,7 +6,7 @@
     "schema-version": "1.0",
     "image": "xnat/data-snapshot:0.1",
     "type": "docker",
-    "command-line": "python datasnap.py #PROJECT_ID#",
+    "command-line": "python datasnap.py #PROJECT_ID# #BASE_TYPE#",
     "override-entrypoint": true,
     "mounts": [],
     "environment-variables": {
@@ -39,6 +39,14 @@
             "required": true,
             "replacement-key": "#PROJECT_ID#",
             "select-values": []
+        },
+        {
+            "name": "base-type",
+            "description": "Set the granularity of snapshot items.",
+            "type": "string",
+            "required": true,
+            "replacement-key": "#BASE_TYPE#",
+            "select-values": ["FILE", "RESOURCE"]
         }
     ],
     "outputs": [],

@@ -10,6 +10,9 @@ import org.nrg.prefs.exceptions.InvalidPreferenceName;
 import org.nrg.prefs.services.NrgPreferenceService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 @Slf4j
 @NrgPreferenceBean(toolId = "snapshot",
         toolName = "Data Snapshot Prefs",
@@ -30,14 +33,22 @@ public class SnapshotPreferences extends AbstractPreferenceBean {
 
     @NrgPreference(defaultValue = "/data/xnat/snapshots")
     public String getSnapshotPath() {
+        checkSnapshotPath(getValue(SNAPSHOT_PATH));
         return getValue(SNAPSHOT_PATH);
     }
 
     public void setSnapshotPath(final String snapshotPath) {
         try {
+            checkSnapshotPath(snapshotPath);
             set(snapshotPath, SNAPSHOT_PATH);
         } catch (InvalidPreferenceName e) {
             log.error("Invalid preference name {}: something is wrong here.", SNAPSHOT_PATH, e);
+        }
+    }
+
+    private void checkSnapshotPath(String path) {
+        if (!Files.isDirectory(Paths.get(path))){
+            log.error("Snapshot path {} is not a directory.", path);
         }
     }
 }
