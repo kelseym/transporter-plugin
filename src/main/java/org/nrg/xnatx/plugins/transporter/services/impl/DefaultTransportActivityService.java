@@ -4,11 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
 import org.nrg.xnatx.plugins.transporter.model.TransportActivity;
+import org.nrg.xnatx.plugins.transporter.model.TransporterActivityPaginatedRequest;
 import org.nrg.xnatx.plugins.transporter.services.TransportActivityEntityService;
 import org.nrg.xnatx.plugins.transporter.services.TransportActivityService;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +59,11 @@ public class DefaultTransportActivityService implements TransportActivityService
     @Override
     public void deleteRemoteApplicationActivity(String transportSessionId) {
         transportActivityEntityService.delete(transportSessionId);
+    }
+
+    @Override
+    public List<TransportActivity> getPaginated(TransporterActivityPaginatedRequest request) {
+        return transportActivityEntityService.getPaginated(request);
     }
 
 }

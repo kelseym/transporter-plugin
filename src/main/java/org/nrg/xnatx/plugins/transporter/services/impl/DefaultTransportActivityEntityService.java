@@ -9,6 +9,7 @@ import org.nrg.xnatx.plugins.transporter.entities.TransportActivityEntity;
 import org.nrg.xnatx.plugins.transporter.entities.TransportActivityEventEntity;
 import org.nrg.xnatx.plugins.transporter.model.TransportActivity;
 import org.nrg.xnatx.plugins.transporter.model.TransportActivityEvent;
+import org.nrg.xnatx.plugins.transporter.model.TransporterActivityPaginatedRequest;
 import org.nrg.xnatx.plugins.transporter.services.TransportActivityEntityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +55,10 @@ public class DefaultTransportActivityEntityService
         return toPojo(getDao().get(sessionId, user, snapshotId));
     }
 
+    @Override
+    public List<TransportActivity> getPaginated(TransporterActivityPaginatedRequest request) {
+        return toPojo(super.getPaginated(request));
+    }
 
     @Override
     public TransportActivityEntity fromPojo(TransportActivity activity) {

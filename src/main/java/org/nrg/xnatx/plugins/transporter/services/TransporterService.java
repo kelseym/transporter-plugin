@@ -7,6 +7,7 @@ import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
 import org.nrg.xnatx.plugins.transporter.model.TransportActivity;
+import org.nrg.xnatx.plugins.transporter.model.TransporterActivityPaginatedRequest;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -48,6 +49,8 @@ public interface TransporterService {
     void updateRemoteApplicationStatus(RemoteAppHeartbeat heartbeat);
 
     List<TransportActivity> getRemoteApplicationActivity(String transportSessionId, UserI user, String snapshotId);
+
+    List<TransportActivity> getRemoteApplicationActivity(TransporterActivityPaginatedRequest request);
 
     void deleteRemoteApplicationActivity(String sessionId);
 }

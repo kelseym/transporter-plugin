@@ -1,6 +1,5 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
@@ -10,6 +9,7 @@ import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
 import org.nrg.xnatx.plugins.transporter.model.TransportActivity;
+import org.nrg.xnatx.plugins.transporter.model.TransporterActivityPaginatedRequest;
 import org.nrg.xnatx.plugins.transporter.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -220,6 +220,11 @@ public class DefaultTransporterService implements TransporterService {
         List<TransportActivity> remoteApplicationActivity =
                 transportActivityService.getRemoteApplicationActivity(transportSessionId, user, snapshotId);
         return remoteApplicationActivity != null ? remoteApplicationActivity : Collections.emptyList();
+    }
+
+    @Override
+    public List<TransportActivity> getRemoteApplicationActivity(TransporterActivityPaginatedRequest request) {
+        return transportActivityService.getPaginated(request);
     }
 
     @Override
