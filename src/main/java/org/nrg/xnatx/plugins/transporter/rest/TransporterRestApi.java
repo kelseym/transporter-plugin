@@ -182,7 +182,7 @@ public class TransporterRestApi extends AbstractXapiRestController {
     }
 
     // REST endpoints to collect transfer activity from remote application
-    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = POST)
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = PUT)
     @ApiOperation(value = "Update remote application activity.")
     public ResponseEntity updateActivity(
                 @RequestBody(required = true) TransportActivity.TransportActivityMessage activityMessage,

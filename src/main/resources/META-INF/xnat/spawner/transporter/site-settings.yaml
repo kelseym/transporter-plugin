@@ -55,7 +55,7 @@ transporterActivityPanel:
       contents:
         "The Transporter Activity panel displays all Transporter activity across the site."
     transporterActivityTable:
-      tag: "div#transporter-activity-table"
+      tag: "div#transporter-activity-container"
     transporterActivityScript:
       tag: script|src="~/scripts/xnat/plugin/transporter/transporter-activity-admin.js"
     renderTransporterActivityTable:
