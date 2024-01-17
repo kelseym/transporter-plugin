@@ -61,7 +61,7 @@ transporterActivityPanel:
     renderTransporterActivityTable:
       tag: script
       content: >
-        XNAT.plugin.transporter.activity.init('transporter-activity-table');    
+        XNAT.plugin.transporter.activityTable.init('transporter-activity-container');    
 
 snapshotPanel:
   kind: panel
