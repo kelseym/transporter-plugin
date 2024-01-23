@@ -85,7 +85,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
         XNAT.plugin.transporter.activityTable.viewActivity(activityId);
     }
 
-    const labelMap = {
+    const activityLabelMap = {
         // id:             {label: 'ID', op: 'eq', type: 'number', show: false},
         timestamp:  {label: 'Date', column: 'timestamp', show: true},
         sessionId:    {label: 'Transport ID', column: 'sessionId', show: true},
@@ -120,19 +120,19 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
             items: {
                 // id: {
                 //     th: {className: 'id'},
-                //     label: labelMap.id['label'],
+                //     label: activityLabelMap.id['label'],
                 //     apply: function(){
                 //         return this.id.toString();
                 //     }
                 // },
                 timestamp: {
-                    label: labelMap.timestamp['label'],
+                    label: activityLabelMap.timestamp['label'],
                     th: {className: 'DATE'},
                     apply: function () {
                         let timestamp = this['timestamp'];
                         let dateString = '';
                         if (timestamp) {
-                            timestamp = timestamp.replace(/-/g, '/'); // include date format hack for Safari
+                            //timestamp = timestamp.replace(/-/g, '/'); // include date format hack for Safari
                             if (timestamp.indexOf('UTC') < 0) {
                                 timestamp = timestamp.trim() + ' UTC';
                             }
@@ -147,7 +147,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
                 },
                 sessionId: {
                     th: {className: 'sessionId'},
-                    label: labelMap.sessionId['label'],
+                    label: activityLabelMap.sessionId['label'],
                     apply: function () {
                         return this['sessionId']
                     }
@@ -171,7 +171,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
                 },
                 username: {
                     th: {className: 'username'},
-                    label: labelMap.username['label'],
+                    label: activityLabelMap.username['label'],
                     apply: function () {
                         return this['username']
                     }
@@ -179,7 +179,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
                 snapshotId: {
                     th: {className: 'snapshotId'},
                     td: {className: 'snapshotId word-wrapped'},
-                    label: labelMap.snapshotId['label'],
+                    label: activityLabelMap.snapshotId['label'],
                     apply: function(){
                         return this['label'];
                     }
@@ -617,7 +617,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
         if (context) {
             activityTable.context = context;
         }
-        function setupParams() {
+        function activitySetupParams() {
             if (context) {
                 XNAT.ui.ajaxTable.filters = XNAT.ui.ajaxTable.filters || {};
             }
@@ -629,8 +629,9 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
         XNAT.plugin.transporter.activityTable.activityData =
             XNAT.ui.ajaxTable.AjaxTable(XNAT.url.restUrl('/xapi/transporter/activity/all'),
             'transporter-activity-table', activityTableContainerId, 'Activity', 'All activity',
-            activityTableObject(), setupParams, null, dataLoadCallback, null, labelMap);
+            activityTableObject(), activitySetupParams, null, activityDataLoadCallback, null, activityLabelMap);
 
+        XNAT.plugin.transporter.activityTable.activityData.loading = false;
         XNAT.plugin.transporter.activityTable.activityData.load();
 
         // add a "find by ID" input field after the table renders
@@ -657,7 +658,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
 
     };
 
-    function dataLoadCallback(data) {
+    function activityDataLoadCallback(data) {
         data.forEach(function (activityEntry) {
             // data.filter(function(entry){ return entry.id === activityEntry.id })[0].context = activityTable.context;
             activityEntry.context = activityTable.context;
