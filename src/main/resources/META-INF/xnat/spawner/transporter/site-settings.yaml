@@ -49,19 +49,24 @@ transporterActivityPanel:
   kind: panel
   name : transporterActivity
   label: Site-wide Transporter Activity
+  footer: false
   contents:
-    transporterActivityDescription:
-      tag: div.message
+    transporterActivityTableContainer:
+      tag: div.tab-container
       contents:
-        "The Transporter Activity panel displays all Transporter activity across the site."
-    transporterActivityTable:
-      tag: "div#transporter-activity-container"
+        dataTableContainer:
+          tag: div#transporter-activity-container.data-table-wrapper.clean
+          contents: Loading Transporter activity...
+    #transporterActivityDescription:
+    #  tag: div.message
+    #  contents:
+    #    "The Transporter Activity panel displays all Transporter activity across the site."
     transporterActivityScript:
       tag: script|src="~/scripts/xnat/plugin/transporter/transporter-activity-admin.js"
-    renderTransporterActivityTable:
-      tag: script
-      content: >
-        XNAT.plugin.transporter.activityTable.init('transporter-activity-container');    
+    #renderTransporterActivityTable:
+    #  tag: script
+    #  content: >
+    #    XNAT.plugin.transporter.activityTable.init('transporter-activity-container');
 
 snapshotPanel:
   kind: panel
