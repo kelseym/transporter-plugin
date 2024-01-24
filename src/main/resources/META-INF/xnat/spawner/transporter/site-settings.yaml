@@ -55,7 +55,7 @@ transporterActivityPanel:
       tag: div.tab-container
       contents:
         dataTableContainer:
-          tag: div#transporter-activity-container.data-table-wrapper.clean
+          tag: div#transporter-activity-container
           contents: Loading Transporter activity...
     #transporterActivityDescription:
     #  tag: div.message
