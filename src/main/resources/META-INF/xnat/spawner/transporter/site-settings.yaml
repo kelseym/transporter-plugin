@@ -57,12 +57,11 @@ transporterActivityPanel:
         dataTableContainer:
           tag: div#transporter-activity-container
           contents: Loading Transporter activity...
-    #transporterActivityDescription:
+    transporterActivityScript:
+      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-activity-admin.js"    #transporterActivityDescription:
     #  tag: div.message
     #  contents:
     #    "The Transporter Activity panel displays all Transporter activity across the site."
-    transporterActivityScript:
-      tag: script|src="~/scripts/xnat/plugin/transporter/transporter-activity-admin.js"
     #renderTransporterActivityTable:
     #  tag: script
     #  content: >

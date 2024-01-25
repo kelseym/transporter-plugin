@@ -25,7 +25,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
      * GLOBAL FUNCTIONS *
      * ================ */
 
-    var undefined,
+    let undefined,
         rootUrl = XNAT.url.rootUrl,
         restUrl = XNAT.url.restUrl,
         csrfUrl = XNAT.url.csrfUrl;
@@ -68,12 +68,10 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
      * TransportActivity *
      * ================= */
 
-    var activityTable, transportActivity;
-
-    XNAT.plugin.transporter.activityTable = activityTable =
+    XNAT.plugin.transporter.activityTable =
         getObject(XNAT.plugin.transporter.activityTable || {});
 
-    XNAT.plugin.transporter.transportActivity = transportActivity =
+    XNAT.plugin.transporter.transportActivity =
         getObject(XNAT.plugin.transporter.transportActivity || {});
 
     //must exist within a div.tab-container and have class data-table-container
@@ -142,7 +140,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
                     td: {className: 'snapshotId word-wrapped'},
                     label: activityLabelMap.snapshotId['label'],
                     apply: function(){
-                        return this['label'];
+                        return this['snapshot-id-display'];
                     }
                 }
             }
@@ -151,10 +149,10 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
 
 
 
-    activityTable.init = activityTable.refresh = function (context) {
+    XNAT.plugin.transporter.activityTable.init = XNAT.plugin.transporter.activityTable.refresh = function (context) {
         console.log('transporter-activityTable.init()');
         if (context) {
-            activityTable.context = context;
+            XNAT.plugin.transporter.activityTable.context = context;
         }
         function activitySetupParams() {
             if (context) {
@@ -162,11 +160,13 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
             }
         }
 
-        $('#' + activityTableContainerId).empty();
+        //$('#' + activityTableContainerId).empty();
         XNAT.plugin.transporter.activityTable.activityData =
             XNAT.ui.ajaxTable.AjaxTable(XNAT.url.restUrl('/xapi/transporter/activity/all'),
             'transporter-activity-table', activityTableContainerId, 'Activity', 'All activity',
-            activityTableObject(), activitySetupParams, null, activityDataLoadCallback, null, activityLabelMap);
+            activityTableObject(), activitySetupParams,
+                null, activityDataLoadCallback, null,
+                activityLabelMap, true);
 
         XNAT.plugin.transporter.activityTable.activityData.loading = false;
         XNAT.plugin.transporter.activityTable.activityData.load();
@@ -175,12 +175,12 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
     function activityDataLoadCallback(data) {
         data.forEach(function (activityEntry) {
             // data.filter(function(entry){ return entry.id === activityEntry.id })[0].context = activityTable.context;
-            activityEntry.context = activityTable.context;
-            transportActivity[activityEntry.id] = activityEntry;
+            activityEntry.context = XNAT.plugin.transporter.activityTable.context;
+            XNAT.plugin.transporter.transportActivity[activityEntry.id] = activityEntry;
         });
     }
 }));
 
 $(document).ready(function(){
-    XNAT.plugin.transporter.activityTable.init();
+    XNAT.plugin.transporter.activityTable.init('transporter-activity-container');
 });

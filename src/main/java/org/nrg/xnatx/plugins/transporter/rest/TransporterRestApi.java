@@ -198,16 +198,16 @@ public class TransporterRestApi extends AbstractXapiRestController {
 
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = POST, consumes = JSON, produces = JSON)
     @ApiOperation(value = "Get remote application activity by user.")
-    public ResponseEntity<List<TransportActivity>> getActivity(@RequestBody TransporterActivityPaginatedRequest request)
+    public List<TransportActivity> getActivity(@RequestBody TransporterActivityPaginatedRequest request)
             throws Exception {
-        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(request));
+        return transporterService.getRemoteApplicationActivity(request);
     }
 
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/activity"}, method = GET)
     @ApiOperation(value = "Get remote application activity by user.")
-    public ResponseEntity<List<TransportActivity>> getActivity(@RequestParam(required = false) String snapshotId)
+    public List<TransportActivity> getActivity(@RequestParam(required = false) String snapshotId)
             throws Exception {
-        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(null, getUser(), snapshotId));
+        return transporterService.getRemoteApplicationActivity(null, getUser(), snapshotId);
     }
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/activity/{sessionId}"}, method = DELETE)
@@ -219,17 +219,17 @@ public class TransporterRestApi extends AbstractXapiRestController {
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/activity/all"}, method = POST, consumes = JSON, produces = JSON)
     @ApiOperation(value = "Get all remote application activity.")
-    public ResponseEntity<List<TransportActivity>> getAllActivity(@RequestBody TransporterActivityPaginatedRequest request)
+    public List<TransportActivity> getAllActivity(@RequestBody TransporterActivityPaginatedRequest request)
             throws Exception {
-        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(request));
+        return transporterService.getRemoteApplicationActivity(request);
     }
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/activity/all"}, method = GET)
     @ApiOperation(value = "Get all remote application activity.")
-    public ResponseEntity<List<TransportActivity>> getAllActivity(@RequestParam(required = false) String snapshotId,
+    public List<TransportActivity> getAllActivity(@RequestParam(required = false) String snapshotId,
                                                                   @RequestParam(required = false) String sessionId)
             throws Exception {
-        return ResponseEntity.ok(transporterService.getRemoteApplicationActivity(sessionId, null, snapshotId));
+        return transporterService.getRemoteApplicationActivity(sessionId, null, snapshotId);
     }
 
     private UserI getUser() {
