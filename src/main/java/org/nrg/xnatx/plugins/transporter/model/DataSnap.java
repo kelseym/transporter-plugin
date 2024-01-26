@@ -3,6 +3,7 @@ package org.nrg.xnatx.plugins.transporter.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModel;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import java.util.stream.Stream;
 @ApiModel(value = "DataSnap",
         description = "Data manifest structure used to drive the XNAT Transporter function.")
 
+@JsonPropertyOrder({"id", "label", "description", "root-path", "path-root-key", "base-type", "build-state", "content"})
 public class DataSnap implements Serializable {
 
     @Nullable
@@ -34,6 +36,8 @@ public class DataSnap implements Serializable {
     @Nullable
     @JsonProperty("path-root-key")
     private String pathRootKey;
+    @JsonProperty("base-type")
+    private String baseType;
     @JsonProperty("build-state")
     private BuildState buildState;
     @Nullable
@@ -49,6 +53,11 @@ public class DataSnap implements Serializable {
     @JsonIgnore
     public Stream<SnapItem> streamSnapItems(SnapItem.XnatType... xnatTypes) {
         return content.stream().flatMap(si -> si.flatten(xnatTypes));
+    }
+
+    @JsonIgnore
+    public Stream<SnapItem> streamSnapItems(SnapItem.FileType fileType) {
+        return content.stream().flatMap(si -> si.flatten(fileType));
     }
 
     @JsonIgnore

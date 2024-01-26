@@ -27,7 +27,7 @@ plugins {
 }
 
 group "org.nrg.xnatx.plugins"
-version "0.3.0"
+version "0.4.0"
 description "XNAT Transporter Plugin"
 
 // TODO: This provides access to all of these repositories for dependency resolution.
