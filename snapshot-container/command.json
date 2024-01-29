@@ -43,7 +43,7 @@
         {
             "name": "base-type",
             "description": "Set the granularity of snapshot items.",
-            "type": "string",
+            "type": "select-one",
             "required": true,
             "replacement-key": "#BASE_TYPE#",
             "select-values": ["FILE", "RESOURCE"]
