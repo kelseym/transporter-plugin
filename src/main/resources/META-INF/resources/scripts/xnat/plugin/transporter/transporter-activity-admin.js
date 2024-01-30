@@ -125,6 +125,7 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
             activityTableObject(), activitySetupParams,
                 null, activityDataLoadCallback, null,
                 activityLabelMap, true);
+        XNAT.plugin.transporter.activityTable.activityData.loading = false;
         console.log('Loading XNAT.plugin.transporter.activityTable.activityData');
         XNAT.plugin.transporter.activityTable.activityData.load();
         console.log(getObject(XNAT.plugin.transporter.activityTable.activityData));
