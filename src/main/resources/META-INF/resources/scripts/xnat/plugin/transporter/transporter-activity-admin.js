@@ -21,48 +21,6 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
 }(function() {
 
     console.log('transporter-activity-admin.js');
-    /* ================ *
-     * GLOBAL FUNCTIONS *
-     * ================ */
-
-    let undefined,
-        rootUrl = XNAT.url.rootUrl,
-        restUrl = XNAT.url.restUrl,
-        csrfUrl = XNAT.url.csrfUrl;
-
-    function spacer(width) {
-        return spawn('i.spacer', {
-            style: {
-                display: 'inline-block',
-                width: width + 'px'
-            }
-        })
-    }
-
-    function errorHandler(e, title, closeAll) {
-        console.log(e);
-        title = (title) ? 'Error: ' + title : 'Error';
-        closeAll = (closeAll === undefined) ? true : closeAll;
-        var errormsg = (e.statusText) ? '<p><strong>Error ' + e.status + ': ' + e.statusText + '</strong></p><p>' + e.responseText + '</p>' : e;
-        XNAT.dialog.open({
-            width: 450,
-            title: title,
-            content: errormsg,
-            buttons: [
-                {
-                    label: 'OK',
-                    isDefault: true,
-                    close: true,
-                    action: function () {
-                        if (closeAll) {
-                            xmodal.closeAll();
-                            XNAT.ui.dialog.closeAll();
-                        }
-                    }
-                }
-            ]
-        });
-    }
 
     /* ================= *
      * TransportActivity *
@@ -160,16 +118,16 @@ XNAT.plugin.transporter = getObject(XNAT.plugin.transporter || {});
             }
         }
 
-        //$('#' + activityTableContainerId).empty();
+        $('#' + activityTableContainerId).empty();
         XNAT.plugin.transporter.activityTable.activityData =
             XNAT.ui.ajaxTable.AjaxTable(XNAT.url.restUrl('/xapi/transporter/activity/all'),
             'transporter-activity-table', activityTableContainerId, 'Activity', 'All activity',
             activityTableObject(), activitySetupParams,
                 null, activityDataLoadCallback, null,
                 activityLabelMap, true);
-
-        XNAT.plugin.transporter.activityTable.activityData.loading = false;
+        console.log('Loading XNAT.plugin.transporter.activityTable.activityData');
         XNAT.plugin.transporter.activityTable.activityData.load();
+        console.log(getObject(XNAT.plugin.transporter.activityTable.activityData));
     };
 
     function activityDataLoadCallback(data) {

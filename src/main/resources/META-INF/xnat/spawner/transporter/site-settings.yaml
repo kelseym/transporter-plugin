@@ -80,10 +80,10 @@ snapshotPanel:
       tag: "div#transporter-snapshot-table"
     snapshotScript:
       tag: script|src="~/scripts/xnat/plugin/transporter/transporter-snapshot-admin.js"
-    renderSnapshotTable:
-      tag: script
-      content: >
-        XNAT.plugin.transporter.snapshot.init('transporter-snapshot-table');
+    #renderSnapshotTable:
+    #  tag: script
+    #  content: >
+    #    XNAT.plugin.transporter.snapshot.init('transporter-snapshot-table');
 
 
 
