@@ -54,8 +54,8 @@ transporterActivityPanel:
     transporterActivityTableContainer:
       tag: div.tab-container
       contents:
-        dataTableContainer:
-          tag: div#transporter-activity-container
+        transporterActivityDataTableContainer:
+          tag: div#transporter-activity-container.data-table-container
           contents: Loading Transporter activity...
     transporterActivityScript:
       tag: script|src="~/scripts/xnat/plugin/transporter/transporter-activity-admin.js"    #transporterActivityDescription:
