@@ -99,6 +99,17 @@ public class TransporterRestApi extends AbstractXapiRestController {
         return transporterService.getDataSnap(getUser(), id);
     }
 
+    // REST Endpoint to GET a particular snapshot for a given user
+    @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}"}, method = POST)
+    @ApiOperation(value = "Update snapshot by id.")
+    @ResponseBody
+    public DataSnap updateSnap(final @PathVariable String id, final @RequestBody DataSnap dataSnap) throws UnauthorizedException, NotFoundException {
+        if (dataSnap.getId() == null || !dataSnap.getId().equals(id)) {
+            throw new IllegalArgumentException("DataSnap id must match id in request path.");
+        }
+        return transporterService.updateDataSnap(getUser(), dataSnap);
+    }
+
     // REST Endpoint to DELETE a particular snapshot for a given user
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/datasnap/{id}"}, method = DELETE)
     @ApiOperation(value = "Delete snapshot.")

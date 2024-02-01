@@ -41,8 +41,33 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
         })
     }
 
+    function errorHandler(e, title, closeAll){
+        console.log(e);
+        title = (title) ? 'Error Found: '+ title : 'Error';
+        closeAll = (closeAll === undefined) ? true : closeAll;
+        var errormsg = (e.statusText) ? '<p><strong>Error ' + e.status + ': '+ e.statusText+'</strong></p><p>' + e.responseText + '</p>' : e;
+        XNAT.dialog.open({
+            width: 450,
+            title: title,
+            content: errormsg,
+            buttons: [
+                {
+                    label: 'OK',
+                    isDefault: true,
+                    close: true,
+                    action: function(){
+                        if (closeAll) {
+                            xmodal.closeAll();
+
+                        }
+                    }
+                }
+            ]
+        });
+    }
+
     XNAT.plugin.transporter.snapshot.getSnapshots = async function() {
-        console.debug('transporter-snapshot-admin.js: XNAT.plugin.transporter.snapshot.getSnapshot');
+        console.debug('transporter-snapshot-admin.js: XNAT.plugin.transporter.snapshot.getSnapshots');
 
         const response = await fetch(restUrl('/xapi/transporter/datasnaps'), {
             method: 'GET',
@@ -54,6 +79,19 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
         }
         return await response.json();
     }
+
+    XNAT.plugin.transporter.snapshot.getSnapshot = function(id) {
+        console.debug('transporter-snapshot-admin.js: XNAT.plugin.transporter.snapshot.getSnapshot');
+        return XNAT.xhr.get({
+            url: getSnapshotEditUrl(id),
+            dataType: 'json',
+            success: function(data){
+                if (data) {
+                    return data;
+                }
+            }
+        })
+    };
 
     XNAT.plugin.transporter.snapshot.mirrorSnapshot = async function(snapshotId, force = false) {
         console.debug('transporter-snapshot-admin.js: XNAT.plugin.transporter.snapshot.mirrorSnapshot');
@@ -153,6 +191,18 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
                 }
             });
         }
+
+        function editSnapshotButton(snapshotId){
+            return spawn('button.btn.sm', {
+                onclick: function(e){
+                    e.preventDefault();
+                    XNAT.plugin.transporter.snapshot.getSnapshot(snapshotId).done(function(snapshot){
+                        XNAT.plugin.transporter.snapshot.dialog(snapshot);
+                    });
+                }
+            }, '<i class="fa fa-pencil" title="Edit Command"></i>');
+        }
+
         function deleteSnapshotButton(snapshotId, label) {
             return spawn('button.btn.btn-sm.delete-config-button', {
                 html: "<i class='fa fa-trash-o' title='Delete Snapshot'></i>",
@@ -162,6 +212,68 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
                 }
             })
         }
+
+        // create a code editor dialog to view a snapshot definition
+        XNAT.plugin.transporter.snapshot.dialog = function(snapshot){
+            var _source,_editor;
+            snapshot = snapshot || {};
+
+            var dialogButtons = {
+                update: {
+                    label: 'Save',
+                    isDefault: true,
+                    action: function(){
+                        var editorContent = _editor.getValue().code;
+
+                        var url = getSnapshotEditUrl(snapshot.id);
+
+                        XNAT.xhr.postJSON({
+                            url: url,
+                            dataType: 'json',
+                            data: editorContent,
+                            success: function(){
+                                XNAT.plugin.transporter.snapshot.refresh();
+                                xmodal.closeAll();
+                                XNAT.ui.banner.top(2000, 'Snapshot updated.', 'success');
+                            },
+                            fail: function(e){
+                                errorHandler(e, 'Could Not Update', false);
+                            }
+                        });
+                    }
+                },
+                close: { label: 'Cancel' }
+            };
+
+            // sanitize the command definition so it can be updated
+            var sanitizedVars = {};
+            ['id', 'root-path', 'build-state'].forEach(function(v){
+                sanitizedVars[v] = snapshot[v];
+                delete snapshot[v];
+            });
+
+            _source = spawn ('textarea', JSON.stringify(snapshot, null, 4));
+
+            _editor = XNAT.app.codeEditor.init(_source, {
+                language: 'json'
+            });
+
+            _editor.openEditor({
+                title: 'Edit Definition For ' + snapshot.name,
+                classes: 'plugin-json',
+                buttons: dialogButtons,
+                height: 680,
+                afterShow: function(dialog, obj){
+                    obj.aceEditor.setReadOnly(false);
+                    dialog.$modal.find('.body .inner').prepend(
+                        spawn('div',[
+                            spawn('p', 'Snapshot Name: '+snapshot['name']),
+                        ])
+                    );
+                }
+            });
+        };
+
 
         // initialize the table
         const snapshotTable = XNAT.table({
@@ -198,7 +310,8 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
                           .td([spawn('div.center', [description])])
                           .td([spawn('div.center', [buildState])])
                           .td([['div.center',
-                              [mirrorSnapshotButton(id, isMirrored), spacer(6), viewSnapshotButton(id, label), spacer(6), deleteSnapshotButton(id, label)]]]);
+                              [mirrorSnapshotButton(id, isMirrored), spacer(6), viewSnapshotButton(id, label),
+                                  spacer(6), editSnapshotButton(id), spacer(6), deleteSnapshotButton(id, label)]]]);
             })
             
             if (noSnapshots) {

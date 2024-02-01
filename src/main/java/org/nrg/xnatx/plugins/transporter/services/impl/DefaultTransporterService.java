@@ -2,6 +2,7 @@ package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
+import org.nrg.xapi.model.users.User;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
@@ -65,6 +66,17 @@ public class DefaultTransporterService implements TransporterService {
             throw new UnauthorizedException("User " + user.getUsername() + " is not authorized to read data snap " + id);
         }
         return dataSnapEntityService.getDataSnap(Long.parseLong(id));
+    }
+
+    @Override
+    public DataSnap updateDataSnap(UserI user, DataSnap dataSnap) throws UnauthorizedException, NotFoundException {
+        if (dataSnap != null) {
+            DataSnap.BuildState buildState = dataSnap.getBuildState();
+            //TODO:
+            //dataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
+            //dataSnapEntityService.updateDataSnap(dataSnap);
+        }
+        return dataSnap;
     }
 
     @Override
@@ -158,6 +170,7 @@ public class DefaultTransporterService implements TransporterService {
                     dataSnap = dataSnapResolutionService.mirrorDataSnap(dataSnap);
                 case MIRRORED:
                     if (force) {
+                        //TODO: attempt to delete the old snapshot directory
                         dataSnap = dataSnapResolutionService.mirrorDataSnap(
                                 dataSnapResolutionService.resolveDataSnap(dataSnap));
                     }

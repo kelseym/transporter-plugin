@@ -18,6 +18,8 @@ public interface TransporterService {
 
     DataSnap getDataSnap(UserI user, String id) throws UnauthorizedException, NotFoundException;
 
+    DataSnap updateDataSnap(UserI user, DataSnap dataSnap) throws UnauthorizedException, NotFoundException;
+
     DataSnap getDataSnapByLabel(UserI user, String label) throws UnauthorizedException, NotFoundException;
 
     DataSnap getResolvedDataSnap(UserI user, String id) throws UnauthorizedException, NotFoundException;
