@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
+import org.nrg.xnatx.plugins.transporter.exceptions.SnapshotValidationException;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
@@ -77,7 +78,8 @@ public class DefaultTransporterService implements TransporterService {
     }
 
     @Override
-    public DataSnap getResolvedDataSnap(UserI user, String id) throws RuntimeException, UnauthorizedException, NotFoundException {
+    public DataSnap getResolvedDataSnap(UserI user, String id)
+            throws RuntimeException, UnauthorizedException, NotFoundException, SnapshotValidationException {
         DataSnap dataSnap = getDataSnap(user, id);
         try {
             if (dataSnap != null) {
@@ -106,6 +108,23 @@ public class DefaultTransporterService implements TransporterService {
         dataSnap = dataSnapEntityService.createDataSnap(user.getLogin(),dataSnap.toBuilder()
                 .buildState(resolve ? RESOLVED : CREATED).build());
         return Optional.of(dataSnap);
+    }
+
+    @Override
+    public DataSnap updateDataSnap(UserI user, String id, DataSnap updatedDataSnap) throws NotFoundException, UnauthorizedException, SnapshotValidationException {
+        DataSnap dataSnap = dataSnapEntityService.getDataSnap(Long.parseLong(id));
+        snapUserEntityService.findByDataSnapId(Long.parseLong(id)).stream()
+                .filter(sue -> sue.getLogin().equals(user.getLogin()) && sue.getRole().equals(SnapUserEntity.Role.OWNER))
+                .findFirst().orElseThrow(() -> new UnauthorizedException("User " + user.getUsername() + " is not authorized to update data snap " + id));
+
+        // Update user-modifiable properties
+        dataSnap.setLabel(updatedDataSnap.getLabel());
+        dataSnap.setDescription(updatedDataSnap.getDescription());
+        dataSnap.setContent(updatedDataSnap.getContent());
+
+        DataSnap resolvedDataSnap = dataSnapResolutionService.resolveDataSnap(dataSnap);
+        dataSnapEntityService.updateDataSnap(resolvedDataSnap);
+        return resolvedDataSnap;
     }
 
     @Override

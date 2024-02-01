@@ -41,6 +41,32 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
         })
     }
 
+    function errorHandler(e, title, closeAll){
+        console.log(e);
+        title = (title) ? 'Error Found: '+ title : 'Error';
+        closeAll = (closeAll === undefined) ? true : closeAll;
+        var errormsg = (e.statusText) ? '<p><strong>Error ' + e.status + ': '+ e.statusText+'</strong></p><p>' + e.responseText + '</p>' : e;
+        XNAT.dialog.open({
+            width: 450,
+            title: title,
+            content: errormsg,
+            buttons: [
+                {
+                    label: 'OK',
+                    isDefault: true,
+                    close: true,
+                    action: function(){
+                        if (closeAll) {
+                            xmodal.closeAll();
+
+                        }
+                    }
+                }
+            ]
+        });
+    }
+
+
     XNAT.plugin.transporter.snapshot.getSnapshots = async function() {
         console.debug('transporter-snapshot-admin.js: XNAT.plugin.transporter.snapshot.getSnapshot');
 
@@ -55,6 +81,19 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
         return await response.json();
     }
 
+    XNAT.plugin.transporter.snapshot.getSnapshot = function(id) {
+        console.debug('transporter-snapshot-admin.js: XNAT.plugin.transporter.snapshot.getSnapshot');
+        return XNAT.xhr.get({
+            url: getSnapshotEditUrl(id),
+            dataType: 'json',
+            success: function(data){
+                if (data) {
+                    return data;
+                }
+            }
+        })
+    };
+
     XNAT.plugin.transporter.snapshot.mirrorSnapshot = async function(snapshotId, force = false) {
         console.debug('transporter-snapshot-admin.js: XNAT.plugin.transporter.snapshot.mirrorSnapshot');
 
@@ -64,10 +103,10 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
         })
 
         if (!response.ok) {
-            throw new Error('HTTP error mirroring transporter snapshot: ${response.status}');
+            throw new Error(`HTTP error mirroring transporter snapshot: ${response.status}`);
         }
 
-        return await response.json();
+        return response;
     }
 
     XNAT.plugin.transporter.snapshot.deleteSnapshot = function(id,label){
@@ -96,32 +135,42 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
                 "Create mirror of snapshot data to prepare for Transporter access." :
                 "Re-mirror snapshot data to prepare for Transporter access.";
             return spawn('button.btn.btn-sm.mirror-snapshot-button', {
-                html: "<i class='fa fa-refresh' title='"+message+"'></i>",
+                html: "<i class='fa fa-cogs' title='"+message+"'></i>",
                 data: {"snapshotId": snapshotId},
                 onclick: function() {
                     xmodal.confirm({
-                        height: 220,
+                        height: 150,
                         scroll: false,
                         content: "" +
                             "<p>" + dialogMessage + "</p>",
                         okAction: function() {
                             XNAT.plugin.transporter.snapshot.mirrorSnapshot(snapshotId, force).then((response) => {
                                 if (response.ok) {
-                                    // Check for a successful HTTP response code (e.g., 200 OK)
                                     const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
-                                    delay(500).then(() => XNAT.plugin.transporter.snapshot.refresh());
+                                    delay(1000).then(() => XNAT.plugin.transporter.snapshot.refresh());
                                 } else {
                                     console.error(`Failed to mirror snapshot. HTTP response code: ${response.status}`);
-                                    XNAT.dialog.alert(`Failed to mirror snapshot: ${response.message}`)
+                                    XNAT.dialog.alert(`Failed to mirror snapshot: ${response.message}`);
                                 }
                             }).catch(error => {
                                 console.error(error);
-                                XNAT.dialog.alert(`Error encountered mirroring snapshot: ${error}`)
+                                XNAT.dialog.alert(`Error encountered mirroring snapshot: ${error}`);
                             });
                         }
                     })
                 }
             });
+        }
+
+        function editSnapshotButton(snapshotId){
+            return spawn('button.btn.sm', {
+                onclick: function(e){
+                    e.preventDefault();
+                    XNAT.plugin.transporter.snapshot.getSnapshot(snapshotId).done(function(snapshot){
+                        XNAT.plugin.transporter.snapshot.dialog(snapshot);
+                    });
+                }
+            }, '<i class="fa fa-pencil" title="Edit Command"></i>');
         }
 
         function viewSnapshotButton(snapshotId, label) {
@@ -163,6 +212,101 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
             })
         }
 
+        // Snapshot editor dialog
+        XNAT.plugin.transporter.snapshot.dialog = function(snapshotDef){
+            var _source,_editor;
+            snapshotDef = snapshotDef || {};
+
+            var dialogButtons = {
+                update: {
+                    label: 'Save',
+                    isDefault: true,
+                    action: function(){
+                        var editorContent = _editor.getValue().code;
+                        // editorContent = JSON.stringify(editorContent).replace(/\r?\n|\r/g,' ');
+
+                        var url = getSnapshotEditUrl('/'+sanitizedVars['id']);
+
+                        XNAT.xhr.putJSON({
+                            url: url,
+                            dataType: 'json',
+                            data: editorContent,
+                            success: function(){
+                                XNAT.plugin.transporter.snapshot.refresh('transporter-snapshot-table');
+                                XNAT.ui.dialog.closeAll();
+                                XNAT.ui.banner.top(2000, 'Snapshot definition updated.', 'success');
+                            },
+                            fail: function(e){
+                                if (e.status == 400) {
+                                    XNAT.dialog.open({
+                                        width: 450,
+                                        title: "Error: Could Not Update Snapshot Definition",
+                                        content: "<p><strong>HTTP 400 Error:</strong> The server could not process the request. This may be due to an error in the edited snapshot definition.",
+                                        buttons: [
+                                            {
+                                                label: 'OK',
+                                                isDefault: true,
+                                                close: true,
+                                            }
+                                        ]
+                                    });
+                                } else if (e.status == 500) {
+                                    XNAT.dialog.open({
+                                        width: 450,
+                                        title: "Error: Could Not Update Snapshot Definition",
+                                        content: "<p><strong>HTTP 500 Error:</strong>" + e.responseText + "</p>",
+                                        buttons: [
+                                            {
+                                                label: 'OK',
+                                                isDefault: true,
+                                                close: true,
+                                            }
+                                        ]
+                                    });
+                                }
+
+                                else {
+                                    errorHandler(e, 'Could Not Update', false);
+                                }
+
+                            }
+                        });
+                    },
+                    close: false
+                },
+                close: { label: 'Cancel' }
+            };
+
+            // sanitize the command definition so it can be updated
+            var sanitizedVars = {};
+            ['id', 'root-path', 'path-root-key', 'base-type', 'build-state'].forEach(function(v){
+                sanitizedVars[v] = snapshotDef[v];
+                delete snapshotDef[v];
+            });
+            // remove snap item paths
+            snapshotDef.content.forEach(function(w,i){
+                delete snapshotDef.content[i].path
+            });
+
+            _source = spawn ('textarea', JSON.stringify(snapshotDef, null, 4));
+
+            _editor = XNAT.app.codeEditor.init(_source, {
+                language: 'json'
+            });
+
+            _editor.openEditor({
+                title: 'Edit Definition For ' + snapshotDef.name,
+                classes: 'plugin-json',
+                buttons: dialogButtons,
+                //width: 800,
+                //height: 800,
+                before: spawn('!',[
+                    spawn('p', 'Snapshot ID: '+sanitizedVars['id'])
+                ])
+
+            });
+        };
+
         // initialize the table
         const snapshotTable = XNAT.table({
             className: 'snapshot xnat-table',
@@ -198,7 +342,9 @@ XNAT.plugin.transporter.snapshot = getObject(XNAT.plugin.transporter.snapshot ||
                           .td([spawn('div.center', [description])])
                           .td([spawn('div.center', [buildState])])
                           .td([['div.center',
-                              [mirrorSnapshotButton(id, isMirrored), spacer(6), viewSnapshotButton(id, label), spacer(6), deleteSnapshotButton(id, label)]]]);
+                              [editSnapshotButton(id), spacer(6),
+                                  mirrorSnapshotButton(id, isMirrored), spacer(6),
+                                  deleteSnapshotButton(id, label)]]]);
             })
             
             if (noSnapshots) {

@@ -13,11 +13,11 @@ import org.nrg.xdat.model.XnatAbstractresourceI;
 import org.nrg.xdat.om.XnatResourcecatalog;
 import org.nrg.xdat.preferences.SiteConfigPreferences;
 import org.nrg.xnat.archive.ResourceData;
-import org.nrg.xnat.archive.ValidationException;
 import org.nrg.xnat.helpers.uri.URIManager;
 import org.nrg.xnat.helpers.uri.archive.ResourceURII;
 import org.nrg.xnat.services.archive.CatalogService;
 import org.nrg.xnat.utils.CatalogUtils;
+import org.nrg.xnatx.plugins.transporter.exceptions.SnapshotValidationException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.SnapItem;
 import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
@@ -133,14 +133,16 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
     }
 
     @Override
-    public void validateDataSnap(DataSnap dataSnap, Boolean expectResolved) throws ValidationException {
+    public void validateDataSnap(DataSnap dataSnap, Boolean expectResolved) throws SnapshotValidationException {
         Map<String, Object> errors = Maps.newLinkedHashMap();
         if (dataSnap == null) {
             errors.put("dataSnap", "DataSnap cannot be null");
         }
         else {
-            if (StringUtils.isBlank(dataSnap.getLabel())) {
-                errors.put("label", "Label cannot be blank");
+            String[] INVALID_LABEL_CHARS = {"\\", "/", " "};
+            if (StringUtils.isBlank(dataSnap.getLabel()) ||
+                    StringUtils.containsAny(dataSnap.getLabel(), INVALID_LABEL_CHARS)) {
+                errors.put("label", "Label cannot contain spaces or: " + Arrays.toString(INVALID_LABEL_CHARS));
             }
             if (expectResolved && Strings.isNullOrEmpty(dataSnap.getRootPath())) {
                 errors.put("resolved", "DataSnap is missing root path.");
@@ -151,14 +153,19 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
                 dataSnap.streamSnapItems().forEach(snapItem -> validateSnapItem(snapItem, expectResolved, errors));
             }
         }
+        if (!errors.isEmpty()) {
+            throw new SnapshotValidationException("DataSnap validation failed", errors);
+        }
     }
 
     private void validateSnapItem(SnapItem snapItem, Boolean expectResolved, Map errors) {
-        throw new UnsupportedOperationException("Not implemented");
+        //TODO: Implement content validation
     }
 
     @Override
-    public DataSnap resolveDataSnap(DataSnap dataSnap) throws RuntimeException {
+    public DataSnap resolveDataSnap(DataSnap dataSnap) throws RuntimeException, SnapshotValidationException {
+        validateDataSnap(dataSnap, false);
+
         dataSnap.streamSnapItems().forEach(this::resolveHostPath);
         Optional<String> commonRoot = Strings.isNullOrEmpty(dataSnap.getPathRootKey()) ?
                 findCommonRoot(dataSnap.streamSnapItems().map(SnapItem::getPath)) :

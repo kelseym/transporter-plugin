@@ -2,11 +2,11 @@ package org.nrg.xnatx.plugins.transporter.exceptions;
 
 import java.util.Map;
 
-public class ValidationException extends Exception {
+public class SnapshotValidationException extends Exception {
 
     private final Map<String, Object> validationErrors;
 
-    public ValidationException(final String message, final Map<String, Object> validationErrors) {
+    public SnapshotValidationException(final String message, final Map<String, Object> validationErrors) {
         super(message);
         this.validationErrors = validationErrors;
     }

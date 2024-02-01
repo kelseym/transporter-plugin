@@ -92,3 +92,4 @@ if __name__ == "__main__":
         print(f"Data successfully posted! - {response.text}")
     else:
         print(f"Error occurred: {response.status_code} - {response.text}")
+        exit(1)

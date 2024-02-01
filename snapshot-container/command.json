@@ -2,7 +2,7 @@
     "name": "DataSnap",
     "label": "DataSnap",
     "description": "Create a DataSnap manifest.",
-    "version": "0.4",
+    "version": "0.4.1",
     "schema-version": "1.0",
     "image": "xnat/data-snapshot:0.4",
     "type": "docker",
