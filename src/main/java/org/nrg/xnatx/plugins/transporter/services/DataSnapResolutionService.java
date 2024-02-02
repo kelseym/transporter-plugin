@@ -12,6 +12,8 @@ public interface DataSnapResolutionService {
 
     void validateDataSnap(DataSnap dataSnap, Boolean expectResolved) throws SnapshotValidationException;
 
+    void deleteSnapshotDirectory(DataSnap dataSnap) throws IOException;
+
     DataSnap resolveDataSnap(DataSnap dataSnap) throws SnapshotValidationException;
 
     DataSnap getRemappedDataSnap(DataSnap dataSnap, TransporterPathMapping transporterPathMapping);

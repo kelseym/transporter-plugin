@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.nrg.action.ClientException;
@@ -11,7 +12,6 @@ import org.nrg.action.ServerException;
 import org.nrg.xdat.bean.CatCatalogBean;
 import org.nrg.xdat.model.XnatAbstractresourceI;
 import org.nrg.xdat.om.XnatResourcecatalog;
-import org.nrg.xdat.preferences.SiteConfigPreferences;
 import org.nrg.xnat.archive.ResourceData;
 import org.nrg.xnat.helpers.uri.URIManager;
 import org.nrg.xnat.helpers.uri.archive.ResourceURII;
@@ -66,7 +66,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
 
     @Override
     public DataSnap mirrorDataSnap(@Nonnull DataSnap dataSnap) throws Exception {
-        return mirrorDataSnap(dataSnap, getSnapshotDirectory());
+        return mirrorDataSnap(dataSnap, getNewSnapshotDirectory());
     }
 
     private DataSnap mirrorDataSnap(@Nonnull DataSnap dataSnap, @Nonnull Path targetPath) throws Exception {
@@ -160,6 +160,24 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
 
     private void validateSnapItem(SnapItem snapItem, Boolean expectResolved, Map errors) {
         //TODO: Implement content validation
+    }
+
+    @Override
+    public void deleteSnapshotDirectory(DataSnap dataSnap) throws IOException {
+        if (dataSnap.getBuildState() != MIRRORED) {
+            log.error("DataSnap must be in MIRRORED state to delete snapshot directory.");
+            throw new IOException("DataSnap must be in MIRRORED state to delete snapshot directory.");
+        }
+        Path snapshotDirectory = Paths.get(snapshotPreferences.getSnapshotPath());
+        Path rootPath = Paths.get(dataSnap.getRootPath());
+        if (rootPath.startsWith(snapshotDirectory) && rootPath.toString().contains(SNAP_DIR_PREFIX)) {
+            log.debug("Deleting snapshot directory: " + rootPath.toString());
+            FileUtils.deleteDirectory(rootPath.toFile());
+            dataSnap.setRootPath(null);
+        } else {
+            log.error("Could not delete root path: " + dataSnap.getRootPath() + ". It is not within the snapshot directory.");
+            throw new IOException("Could not delete root path: " + dataSnap.getRootPath() + "It is not within the snapshot directory.");
+        }
     }
 
     @Override
@@ -287,7 +305,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
     }
 
     @Nonnull
-    private Path getSnapshotDirectory() throws IOException {
+    private Path getNewSnapshotDirectory() throws IOException {
         final String rootBuildPath = snapshotPreferences.getSnapshotPath();
         final String uuid = UUID.randomUUID().toString();
         final String buildDir = FilenameUtils.concat(rootBuildPath, SNAP_DIR_PREFIX + uuid);

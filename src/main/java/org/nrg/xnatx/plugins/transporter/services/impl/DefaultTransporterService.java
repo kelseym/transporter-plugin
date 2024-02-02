@@ -162,6 +162,14 @@ public class DefaultTransporterService implements TransporterService {
         if (users.stream().noneMatch(sue -> sue.getLogin().equals(user.getLogin()) && sue.getRole().equals(SnapUserEntity.Role.OWNER))) {
             throw new UnauthorizedException("User " + user.getUsername() + " is not authorized to delete data snap " + id);
         }
+        try {
+            DataSnap dataSnap = dataSnapEntityService.getDataSnap(Long.parseLong(id));
+            if (dataSnap.getBuildState().equals(MIRRORED)) {
+                dataSnapResolutionService.deleteSnapshotDirectory(dataSnap);
+            }
+        } catch (IOException e) {
+            log.error("An error occurred trying to delete the snapshot directory for data snap " + id, e);
+        }
         dataSnapEntityService.deleteDataSnap(Long.parseLong(id));
     }
 
@@ -177,6 +185,7 @@ public class DefaultTransporterService implements TransporterService {
                     dataSnap = dataSnapResolutionService.mirrorDataSnap(dataSnap);
                 case MIRRORED:
                     if (force) {
+                        dataSnapResolutionService.deleteSnapshotDirectory(dataSnap);
                         dataSnap = dataSnapResolutionService.mirrorDataSnap(
                                 dataSnapResolutionService.resolveDataSnap(dataSnap));
                     }
