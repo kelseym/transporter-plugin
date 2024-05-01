@@ -49,31 +49,18 @@ public class TransporterRestApi extends AbstractXapiRestController {
     private static final String JSON = MediaType.APPLICATION_JSON_UTF8_VALUE;
 
     private TransporterService transporterService;
-    private final SnapshotService snapshotService;
     private TransporterConfigService transporterConfigService;
 
     @Autowired
     public TransporterRestApi(TransporterService transporterService,
-                              SnapshotService snapshotService,
                               TransporterConfigService transporterConfigService,
                               UserManagementServiceI userManagementService,
                                  RoleHolder roleHolder) {
         super(userManagementService, roleHolder);
         this.transporterService = transporterService;
-        this.snapshotService = snapshotService;
         this.transporterConfigService = transporterConfigService;
     }
 
-    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/snapshot/"}, method = POST)//, consumes = JSON)
-    @ApiOperation(value = "Create a new snapshot definition. Return a resolved snapshot manifest.")
-    public ResponseEntity<ResolvedSnapshot> createSnapshot()
-            throws Exception {
-
-        return ResponseEntity.ok(snapshotService.createSnapshot(
-                SnapshotRequest.builder().projects(Arrays.asList("Destination")).build(),
-                getUser(),
-                false));
-    }
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/datasnap"}, method = POST, consumes = JSON)
     @ApiOperation(value = "Accepts and processes a DataSnap before adding it to the database")

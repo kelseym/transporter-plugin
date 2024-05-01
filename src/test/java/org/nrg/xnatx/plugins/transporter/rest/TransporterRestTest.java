@@ -3,14 +3,12 @@ package org.nrg.xnatx.plugins.transporter.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalAnswers;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.nrg.xdat.security.services.RoleServiceI;
 import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xft.security.UserI;
@@ -19,8 +17,7 @@ import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotPreferences;
-import org.nrg.xnatx.plugins.transporter.services.TransporterService;
-import org.nrg.xnatx.plugins.transporter.services.impl.DataSnapResolutionService;
+import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.MediaType;
@@ -30,14 +27,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -50,7 +44,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 

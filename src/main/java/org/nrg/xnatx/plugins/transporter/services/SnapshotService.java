@@ -9,6 +9,8 @@ public interface SnapshotService {
 
     ResolvedSnapshot createSnapshot(SnapshotRequest snapshotRequest, UserI userI, Boolean persist) throws Exception;
 
+    ResolvedSnapshot createSnapshot(SnapshotDefinition snapshotDefinition, UserI userI, Boolean persist) throws Exception;
+
     void validateSnapshotDefinition(SnapshotDefinition snapshotDefinition, UserI userI) throws Exception;
 
 

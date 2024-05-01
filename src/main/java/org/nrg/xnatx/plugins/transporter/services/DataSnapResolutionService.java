@@ -1,4 +1,4 @@
-package org.nrg.xnatx.plugins.transporter.services.impl;
+package org.nrg.xnatx.plugins.transporter.services;
 
 import org.nrg.xnatx.plugins.transporter.exceptions.SnapshotValidationException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;

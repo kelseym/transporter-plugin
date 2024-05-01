@@ -1,6 +1,5 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.exceptions.NotFoundException;
 import org.nrg.xft.security.UserI;

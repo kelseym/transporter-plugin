@@ -41,4 +41,36 @@ public class SnapshotDefinition implements Serializable {
         dataTypes.add(dataType);
     }
 
+    public static SnapshotDefinition createFromRequest(SnapshotRequest request) {
+        return SnapshotDefinition.builder()
+                .label(request.getLabel() != null ?
+                        request.getLabel() :
+                        generateLabel(request))
+                .description(request.getDescription())
+                .projects(request.getProjects())
+                .dataTypes(request.getDataTypes())
+                .resources(request.getResources())
+                .build();
+    }
+
+    public static String generateLabel(SnapshotRequest request) {
+        StringBuilder labelBuilder = new StringBuilder();
+
+        // Append projects to the label
+        if (request.getProjects() != null && !request.getProjects().isEmpty()) {
+            labelBuilder.append("Projects-");
+            labelBuilder.append(String.join("-", request.getProjects()));
+        }
+        // Append dataTypes to the label
+        if (request.getDataTypes() != null && !request.getDataTypes().isEmpty()) {
+            labelBuilder.append("_DataTypes-");
+            labelBuilder.append(String.join("-", request.getDataTypes()));
+        }
+        // Append resources to the label
+        if (request.getResources() != null && !request.getResources().isEmpty()) {
+            labelBuilder.append("_Resources-");
+            labelBuilder.append(String.join("-", request.getResources()));
+        }
+        return labelBuilder.toString();
+    }
 }
