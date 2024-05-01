@@ -1,10 +1,11 @@
-package org.nrg.xnatx.plugins.transporter.services;
+package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.framework.orm.hibernate.AbstractHibernateEntityService;
 import org.nrg.xnatx.plugins.transporter.daos.SnapUserEntityDao;
 import org.nrg.xnatx.plugins.transporter.entities.DataSnapEntity;
 import org.nrg.xnatx.plugins.transporter.entities.SnapUserEntity;
+import org.nrg.xnatx.plugins.transporter.services.SnapUserEntityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

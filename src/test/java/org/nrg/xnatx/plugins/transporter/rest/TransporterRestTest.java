@@ -18,9 +18,9 @@ import org.nrg.xnatx.plugins.transporter.config.TransporterRestTestConfig;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
-import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotPreferences;
 import org.nrg.xnatx.plugins.transporter.services.TransporterService;
+import org.nrg.xnatx.plugins.transporter.services.impl.DataSnapResolutionService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.MediaType;

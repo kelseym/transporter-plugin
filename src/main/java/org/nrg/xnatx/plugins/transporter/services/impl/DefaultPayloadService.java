@@ -6,7 +6,6 @@ import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.Payload;
 import org.nrg.xnatx.plugins.transporter.model.SnapItem;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
-import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.PayloadService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.springframework.beans.factory.annotation.Autowired;

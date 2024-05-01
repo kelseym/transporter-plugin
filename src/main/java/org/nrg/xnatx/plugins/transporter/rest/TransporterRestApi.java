@@ -19,11 +19,8 @@ import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnatx.plugins.transporter.exceptions.SnapshotValidationException;
 import org.nrg.xnatx.plugins.transporter.exceptions.UnauthorizedException;
-import org.nrg.xnatx.plugins.transporter.model.DataSnap;
-import org.nrg.xnatx.plugins.transporter.model.Payload;
-import org.nrg.xnatx.plugins.transporter.model.RemoteAppHeartbeat;
-import org.nrg.xnatx.plugins.transporter.model.TransportActivity;
-import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
+import org.nrg.xnatx.plugins.transporter.model.*;
+import org.nrg.xnatx.plugins.transporter.services.SnapshotService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.nrg.xnatx.plugins.transporter.services.TransporterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -51,16 +49,30 @@ public class TransporterRestApi extends AbstractXapiRestController {
     private static final String JSON = MediaType.APPLICATION_JSON_UTF8_VALUE;
 
     private TransporterService transporterService;
+    private final SnapshotService snapshotService;
     private TransporterConfigService transporterConfigService;
 
     @Autowired
     public TransporterRestApi(TransporterService transporterService,
+                              SnapshotService snapshotService,
                               TransporterConfigService transporterConfigService,
                               UserManagementServiceI userManagementService,
                                  RoleHolder roleHolder) {
         super(userManagementService, roleHolder);
         this.transporterService = transporterService;
+        this.snapshotService = snapshotService;
         this.transporterConfigService = transporterConfigService;
+    }
+
+    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/snapshot/"}, method = POST)//, consumes = JSON)
+    @ApiOperation(value = "Create a new snapshot definition. Return a resolved snapshot manifest.")
+    public ResponseEntity<ResolvedSnapshot> createSnapshot()
+            throws Exception {
+
+        return ResponseEntity.ok(snapshotService.createSnapshot(
+                SnapshotRequest.builder().projects(Arrays.asList("Destination")).build(),
+                getUser(),
+                false));
     }
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/datasnap"}, method = POST, consumes = JSON)

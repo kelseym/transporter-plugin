@@ -6,6 +6,7 @@ import org.nrg.prefs.annotations.NrgPreferenceBean;
 import org.nrg.prefs.services.NrgPreferenceService;
 import org.nrg.xdat.preferences.SiteConfigPreferences;
 import org.nrg.xnatx.plugins.transporter.services.*;
+import org.nrg.xnatx.plugins.transporter.services.impl.DataSnapResolutionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

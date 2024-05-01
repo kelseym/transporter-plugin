@@ -27,7 +27,8 @@ public class TransporterRestTestConfig extends WebSecurityConfigurerAdapter {
                                                  final TransporterConfigService transporterConfigService,
                                                   final UserManagementServiceI userManagementService,
                                                  final RoleHolder roleHolder) {
-        return new TransporterRestApi(transporterService, transporterConfigService, userManagementService, roleHolder);
+        return new TransporterRestApi(transporterService, null,
+                transporterConfigService, userManagementService, roleHolder);
     }
 
     @Override

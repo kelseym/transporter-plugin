@@ -21,7 +21,6 @@ import org.nrg.xnatx.plugins.transporter.exceptions.SnapshotValidationException;
 import org.nrg.xnatx.plugins.transporter.model.DataSnap;
 import org.nrg.xnatx.plugins.transporter.model.SnapItem;
 import org.nrg.xnatx.plugins.transporter.model.TransporterPathMapping;
-import org.nrg.xnatx.plugins.transporter.services.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.DataSnapEntityService;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotPreferences;
 import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;

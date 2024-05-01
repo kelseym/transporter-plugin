@@ -3,6 +3,7 @@ package org.nrg.xnatx.plugins.transporter.config;
 
 import org.nrg.framework.configuration.SerializerConfig;
 import org.nrg.xnatx.plugins.transporter.services.*;
+import org.nrg.xnatx.plugins.transporter.services.impl.DataSnapResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.impl.DefaultTransporterService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
