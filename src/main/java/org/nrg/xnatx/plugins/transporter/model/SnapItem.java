@@ -23,6 +23,7 @@ public class SnapItem implements Serializable {
     @Nullable private String label;
     @JsonProperty("file-type") private FileType fileType;
     @Nullable @JsonProperty("xnat-type") private XnatType xnatType;
+    @Nullable @JsonProperty("xsi-type") private String xsiType;
     private String uri;
     @Nullable @JsonProperty("path") private String path;
     @Nullable private List<SnapItem> children;
@@ -36,6 +37,7 @@ public class SnapItem implements Serializable {
         PROJECT,
         SUBJECT,
         SESSION,
+        EXPERIMENT,
         SCAN,
         ASSESSOR,
         RESOURCE,
