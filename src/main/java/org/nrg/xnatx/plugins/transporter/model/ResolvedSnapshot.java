@@ -10,10 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.nrg.xft.security.UserI;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Builder(toBuilder = true)
 @Slf4j
 @ApiModel(value = "ResolvedSnapshot",
         description = "Resolved data manifest structure used to drive the XNAT Transporter function.")

@@ -14,8 +14,8 @@ import javax.annotation.Nullable;
 import java.util.Date;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Builder(toBuilder = true)
 @Slf4j

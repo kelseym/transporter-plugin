@@ -33,10 +33,8 @@ public class DefaultSnapshotService implements SnapshotService {
         validateSnapshotDefinition(snapshotDefinition, userI);
         // Create snapshot from definition
         // TODO: Should this be stored in a cache to enable rechecking permissions at some interval?
-        Snapshot snapshot = new Snapshot(snapshotDefinition, userI);
-
         // Create a new ResolvedSnapshot object
-
+        Snapshot snapshot = resolveSnapshotDefinition(snapshotDefinition, userI);
         return null;
     }
 
@@ -59,7 +57,7 @@ public class DefaultSnapshotService implements SnapshotService {
                     .fileType(SnapItem.FileType.DIRECTORY)
                     .xsiType(projectData.getXSIType());
             try {
-                projectItemBuilder.path(projectData.getRootArchivePath() + projectData.getCurrentArc();
+                projectItemBuilder.path(projectData.getRootArchivePath() + projectData.getCurrentArc());
             } catch (NullPointerException e) {log.error("Project could not get root archive path", e);}
 
             // Get the data types
@@ -79,6 +77,7 @@ public class DefaultSnapshotService implements SnapshotService {
                 }
             }
         }
+        return null;
     }
 
     private List<SnapItem> loadProjectItems(){return null;}
