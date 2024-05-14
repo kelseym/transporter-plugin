@@ -13,9 +13,12 @@ import org.nrg.xdat.security.services.RoleHolder;
 import org.nrg.xdat.security.services.UserHelperServiceI;
 import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xft.security.UserI;
+import org.nrg.xnatx.plugins.transporter.model.MirroredSnapshot;
 import org.nrg.xnatx.plugins.transporter.model.ResolvedSnapshot;
+import org.nrg.xnatx.plugins.transporter.model.SnapshotDefinition;
 import org.nrg.xnatx.plugins.transporter.model.SnapshotRequest;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +34,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RequestMapping(value = "/transporter/snapshot")
 public class SnapshotRestApi  extends AbstractXapiRestController {
 
+    private static final String JSON = MediaType.APPLICATION_JSON_UTF8_VALUE;
     private final SnapshotService snapshotService;
 
     protected SnapshotRestApi(UserManagementServiceI userManagementService, RoleHolder roleHolder, SnapshotService snapshotService) {
@@ -39,13 +43,26 @@ public class SnapshotRestApi  extends AbstractXapiRestController {
     }
 
 
-    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/"}, method = POST)//, consumes = JSON)
-    @ApiOperation(value = "Create a new snapshot definition. Return a resolved snapshot manifest.")
+    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/"}, method = POST, consumes = JSON)
+    @ApiOperation(value = "Create a new snapshot definition. Return a resolved snapshot manifest.",
+            notes = "DOES NOT WORK PROPERLY IN SWAGGER UI")
     public ResponseEntity<ResolvedSnapshot> createSnapshot(@RequestBody SnapshotRequest snapshotRequest)
             throws Exception {
 
         return ResponseEntity.ok(snapshotService.createSnapshot(
-                snapshotRequest.toBuilder().user(getUser()).build(),false));
+                SnapshotDefinition.createFromRequest(snapshotRequest),getUser(), false));
+    }
+
+    @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/mirror"}, method = POST, consumes = JSON)
+    @ApiOperation(value = "Create a new snapshot definition. Return a resolved and mirrored snapshot manifest.",
+            notes = "DOES NOT WORK PROPERLY IN SWAGGER UI")
+    public ResponseEntity<ResolvedSnapshot> createMirroredSnapshot(@RequestBody SnapshotRequest snapshotRequest)
+            throws Exception {
+        ResolvedSnapshot resolvedSnapshot =
+                snapshotService.createSnapshot(
+                        SnapshotDefinition.createFromRequest(snapshotRequest),getUser(), false);
+        MirroredSnapshot mirroredSnapshot = snapshotService.mirrorSnapshot(resolvedSnapshot);
+        return ResponseEntity.ok(mirroredSnapshot);
     }
 
 

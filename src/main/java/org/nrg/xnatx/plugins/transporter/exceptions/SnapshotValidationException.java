@@ -6,7 +6,7 @@ public class SnapshotValidationException extends Exception {
 
     private final Map<String, Object> validationErrors;
 
-    public SnapshotValidationException(final String message, final Map<String, Object> validationErrors) {
+    public SnapshotValidationException(final String message, final Map validationErrors) {
         super(message);
         this.validationErrors = validationErrors;
     }

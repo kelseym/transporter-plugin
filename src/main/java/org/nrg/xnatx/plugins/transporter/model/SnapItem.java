@@ -56,11 +56,11 @@ public class SnapItem implements Serializable {
     }
 
     @JsonIgnore
-    public Stream<SnapItem> flatten(FileType... fileTypes) {
+    public Stream<SnapItem> flatten(FileType fileType) {
         return Stream.concat(
-                fileTypes.length == 0 || Arrays.stream(fileTypes).anyMatch(fileType -> fileType.equals(this.fileType)) ?
+                fileType.equals(this.fileType) ?
                         Stream.of(this) : Stream.empty(),
-                children == null ? Stream.empty() : children.stream().flatMap(si-> si.flatten(fileTypes))
+                children == null ? Stream.empty() : children.stream().flatMap(si-> si.flatten(fileType))
         );
     }
 }

@@ -26,9 +26,7 @@ public class SnapshotRequest {
     @Nullable @JsonProperty("label") private String label;
     @Nullable @JsonProperty("description") private String description;
     @Nullable @JsonProperty("path-root-key") private String pathRootKey;
-    @Nullable @JsonIgnore
-    @JsonProperty("projects") private List<String> projects;
+    @Nullable @JsonProperty("projects") private List<String> projects;
     @Nullable @JsonProperty("data-types") private List<String> dataTypes;
     @Nullable @JsonProperty("resources") private List<String> resources;
-    @JsonIgnore UserI user;
 }

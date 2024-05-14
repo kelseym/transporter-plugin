@@ -8,12 +8,9 @@ import org.nrg.xnatx.plugins.transporter.model.SnapshotRequest;
 
 public interface SnapshotService {
 
-    ResolvedSnapshot createSnapshot(SnapshotRequest snapshotRequest, Boolean persist) throws Exception;
-
     ResolvedSnapshot createSnapshot(SnapshotDefinition snapshotDefinition, UserI userI, Boolean persist) throws Exception;
 
     void validateSnapshotDefinition(SnapshotDefinition snapshotDefinition, UserI userI) throws Exception;
-
 
     MirroredSnapshot mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception;
 }

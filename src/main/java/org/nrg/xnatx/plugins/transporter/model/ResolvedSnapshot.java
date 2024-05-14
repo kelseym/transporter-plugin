@@ -22,16 +22,11 @@ import java.util.stream.Stream;
 @ApiModel(value = "ResolvedSnapshot",
         description = "Resolved data manifest structure used to drive the XNAT Transporter function.")
 public class ResolvedSnapshot {
-    @JsonProperty
-    private SnapshotDefinition snapshotDefinition;
+    @JsonProperty private SnapshotDefinition snapshotDefinition;
     @JsonProperty private Date created;
     @JsonProperty private Date updated;
     @JsonProperty(value = "root-path") private String rootPath;
-    @Nullable
-    @JsonProperty("path-root-key") private String pathRootKey;
-    @JsonProperty("base-type") private String baseType;
-    @Nullable
-    private List<SnapItem> content;
+    @Nullable private List<SnapItem> content;
 
     public ResolvedSnapshot() {
         this.created = new Date();

@@ -31,7 +31,7 @@ public class SnapshotDefinition implements Serializable {
     @Nullable @JsonProperty("description") private String description;
 
     @Nullable  @JsonProperty("path-root-key") private String pathRootKey;
-    @JsonProperty("base-type") private String baseType = "RESOURCE"; // FILE || RESOURCE
+    @JsonProperty("base-type") private String baseType; // FILE || RESOURCE
 
 
     @JsonProperty("projects") private List<String> projects;
@@ -66,17 +66,17 @@ public class SnapshotDefinition implements Serializable {
 
         // Append projects to the label
         if (request.getProjects() != null && !request.getProjects().isEmpty()) {
-            labelBuilder.append("Projects-");
+            labelBuilder.append("P-");
             labelBuilder.append(String.join("-", request.getProjects()));
         }
         // Append dataTypes to the label
         if (request.getDataTypes() != null && !request.getDataTypes().isEmpty()) {
-            labelBuilder.append("_DataTypes-");
+            labelBuilder.append("_D-");
             labelBuilder.append(String.join("-", request.getDataTypes()));
         }
         // Append resources to the label
         if (request.getResources() != null && !request.getResources().isEmpty()) {
-            labelBuilder.append("_Resources-");
+            labelBuilder.append("_R-");
             labelBuilder.append(String.join("-", request.getResources()));
         }
         return labelBuilder.toString();

@@ -134,7 +134,7 @@ public class DefaultDataSnapResolutionService implements DataSnapResolutionServi
 
     @Override
     public void validateDataSnap(DataSnap dataSnap, Boolean expectResolved) throws SnapshotValidationException {
-        Map<String, Object> errors = Maps.newLinkedHashMap();
+        HashMap<String, Object> errors = Maps.newLinkedHashMap();
         if (dataSnap == null) {
             errors.put("dataSnap", "DataSnap cannot be null");
         }
