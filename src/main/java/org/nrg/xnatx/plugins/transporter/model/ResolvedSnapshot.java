@@ -2,6 +2,7 @@ package org.nrg.xnatx.plugins.transporter.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 @Slf4j
 @ApiModel(value = "ResolvedSnapshot",
         description = "Resolved data manifest structure used to drive the XNAT Transporter function.")
+@JsonPropertyOrder({"snapshot-definition", "created", "updated", "root-path", "content"})
 public class ResolvedSnapshot {
     @JsonProperty private SnapshotDefinition snapshotDefinition;
     @JsonProperty private Date created;

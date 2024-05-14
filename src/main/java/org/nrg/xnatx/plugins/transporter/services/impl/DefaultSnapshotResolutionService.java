@@ -142,13 +142,12 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                     .id(projectData.getId())
                     .label(projectData.getName())
                     .xnatType(SnapItem.XnatType.PROJECT)
-                    .fileType(SnapItem.FileType.DIRECTORY)
                     .xsiType(projectData.getXSIType());
-            try {
-                projectItemBuilder.path(projectData.getRootArchivePath() + projectData.getCurrentArc());
-            } catch (NullPointerException e) {
-                log.error("Project could not get root archive path", e);
-            }
+            //try {
+            //    projectItemBuilder.path(projectData.getRootArchivePath() + projectData.getCurrentArc());
+            //} catch (NullPointerException e) {
+            //    log.error("Project could not get root archive path", e);
+            //}
             // Load project children
             List<SnapItem> projectChildrenItems = loadExperimentItems(projectData, snapshotQuery);
             projectItemBuilder.children(projectChildrenItems.isEmpty() ? null : projectChildrenItems);
@@ -173,12 +172,11 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                         .id(experiment.getId())
                         .label(experiment.getLabel())
                         .xnatType(SnapItem.XnatType.EXPERIMENT)
-                        .fileType(SnapItem.FileType.DIRECTORY)
                         .xsiType(experiment.getXSIType());
-                try {
-                    experimentItemBuilder.path(experiment.getCurrentSessionFolder(true));
-                } catch (InvalidArchiveStructure | BaseXnatExperimentdata.UnknownPrimaryProjectException e) {
-                    log.error("Experiment could not get current session folder", e);}
+                //try {
+                //    experimentItemBuilder.path(experiment.getCurrentSessionFolder(true));
+                //} catch (InvalidArchiveStructure | BaseXnatExperimentdata.UnknownPrimaryProjectException e) {
+                //    log.error("Experiment could not get current session folder", e);}
                 // Load experiment children
                 List<SnapItem> experimentChildrenItems = loadExperimentResourceItems(experiment, snapshotQuery);
                 if (experiment instanceof XnatImagesessiondataI) {
@@ -217,11 +215,10 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                     .id(scanData.getId())
                     .label(String.format("%s - %s", scanData.getId(), scanData.getType()))
                     .xnatType(SnapItem.XnatType.SCAN)
-                    .fileType(SnapItem.FileType.DIRECTORY)
                     .xsiType(scanData.getXSIType());
-            if (scanData instanceof XnatImagescandata) {
-                scanItemBuilder.path(((XnatImagescandata) scanData).deriveScanDir());
-            }
+            //if (scanData instanceof XnatImagescandata) {
+            //    scanItemBuilder.path(((XnatImagescandata) scanData).deriveScanDir());
+            //}
             scanItemBuilder.children(loadScanResourceItems((XnatImagescandata) scanData, snapshotQuery));
             snapItems.add(scanItemBuilder.build());
         }
