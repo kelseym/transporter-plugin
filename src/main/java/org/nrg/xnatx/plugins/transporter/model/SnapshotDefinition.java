@@ -1,6 +1,5 @@
 package org.nrg.xnatx.plugins.transporter.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModel;
@@ -10,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.nrg.xft.security.UserI;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -29,9 +29,15 @@ public class SnapshotDefinition implements Serializable {
     @Nullable @JsonProperty("id") private Long id;
     @JsonProperty("label") private String label;
     @Nullable @JsonProperty("description") private String description;
+
+    @Nullable  @JsonProperty("path-root-key") private String pathRootKey;
+    @JsonProperty("base-type") private String baseType = "RESOURCE"; // FILE || RESOURCE
+
+
     @JsonProperty("projects") private List<String> projects;
     @JsonProperty("data-types") private List<String> dataTypes;
     @JsonProperty("resources") private List<String> resources;
+
 
     public void addProject(String project) {
         projects.add(project);
@@ -47,6 +53,8 @@ public class SnapshotDefinition implements Serializable {
                         request.getLabel() :
                         generateLabel(request))
                 .description(request.getDescription())
+                .pathRootKey(request.getPathRootKey())
+                .baseType("RESOURCE")
                 .projects(request.getProjects())
                 .dataTypes(request.getDataTypes())
                 .resources(request.getResources())
@@ -73,4 +81,20 @@ public class SnapshotDefinition implements Serializable {
         }
         return labelBuilder.toString();
     }
+
+    @Data
+    public static class SnapshotQuery {
+        private UserI userI;
+        private List<String> projects;
+        private List<String> dataTypes;
+        private List<String> resources;
+
+        public SnapshotQuery(UserI userI, SnapshotDefinition snapshotDefinition) {
+            this.userI = userI;
+            this.projects = snapshotDefinition.getProjects();
+            this.dataTypes = snapshotDefinition.getDataTypes();
+            this.resources = snapshotDefinition.getResources();
+        }
+    }
+
 }

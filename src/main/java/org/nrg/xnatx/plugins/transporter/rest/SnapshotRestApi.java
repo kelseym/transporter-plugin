@@ -17,6 +17,7 @@ import org.nrg.xnatx.plugins.transporter.model.ResolvedSnapshot;
 import org.nrg.xnatx.plugins.transporter.model.SnapshotRequest;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Arrays;
@@ -40,13 +41,11 @@ public class SnapshotRestApi  extends AbstractXapiRestController {
 
     @XapiRequestMapping(restrictTo = AccessLevel.Admin, value = {"/"}, method = POST)//, consumes = JSON)
     @ApiOperation(value = "Create a new snapshot definition. Return a resolved snapshot manifest.")
-    public ResponseEntity<ResolvedSnapshot> createSnapshot()
+    public ResponseEntity<ResolvedSnapshot> createSnapshot(@RequestBody SnapshotRequest snapshotRequest)
             throws Exception {
 
         return ResponseEntity.ok(snapshotService.createSnapshot(
-                SnapshotRequest.builder().projects(Arrays.asList("Destination")).build(),
-                getUser(),
-                false));
+                snapshotRequest.toBuilder().user(getUser()).build(),false));
     }
 
 
