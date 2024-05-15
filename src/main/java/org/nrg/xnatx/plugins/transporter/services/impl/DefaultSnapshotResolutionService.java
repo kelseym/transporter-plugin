@@ -10,6 +10,7 @@ import org.nrg.xdat.om.XnatExperimentdata;
 import org.nrg.xdat.om.XnatImagescandata;
 import org.nrg.xdat.om.XnatProjectdata;
 import org.nrg.xdat.om.XnatResourcecatalog;
+import org.nrg.xdat.om.XnatSubjectdata;
 import org.nrg.xdat.om.base.BaseXnatExperimentdata;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnat.exceptions.InvalidArchiveStructure;
@@ -46,7 +47,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
     }
 
     @Override
-    public MirroredSnapshot mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception {
+    public MirroredSnapshot mirrorSnapshot(final ResolvedSnapshot resolvedSnapshot) throws Exception {
         return mirrorSnapshot(resolvedSnapshot, getNewSnapshotDirectory());
     }
 
@@ -81,7 +82,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
     }
 
     @Override
-    public ResolvedSnapshot resolveSnapshotDefinition(SnapshotDefinition snapshotDefinition, UserI userI) {
+    public ResolvedSnapshot resolveSnapshotDefinition(final SnapshotDefinition snapshotDefinition, final UserI userI) {
         // Resolve the snapshot definition into a snapshot query object
         SnapshotDefinition.SnapshotQuery snapshotQuery = new SnapshotDefinition.SnapshotQuery(userI, snapshotDefinition);
 
@@ -102,7 +103,8 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                 Path root = Paths.get(commonRoot.get());
                 for (SnapItem snapItem: resolvedSnapshot.streamSnapItems()
                         .filter(Objects::nonNull)
-                        .filter(si -> !Strings.isNullOrEmpty(si.getPath())).collect(Collectors.toList())) {
+                        .filter(si -> si.getPath() != null && !Strings.isNullOrEmpty(si.getPath()))
+                        .collect(Collectors.toList())) {
                     Path path = Paths.get(snapItem.getPath());
                     Path relPath = root.relativize(path);
                     snapItem.setPath(relPath.toString());
@@ -131,7 +133,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         return created;
     }
 
-    private List<SnapItem> loadProjectItems(SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadProjectItems(final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         List<SnapItem> snapItems = new ArrayList<>();
         for (XnatProjectdata projectData :
                 snapshotQuery.getProjects().stream()
@@ -150,24 +152,65 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
             //}
             // Load project children
             List<SnapItem> projectChildrenItems = loadExperimentItems(projectData, snapshotQuery);
+            projectChildrenItems.addAll(loadProjectResourceItems(projectData, snapshotQuery));
+            projectChildrenItems.addAll(loadSubjectItems(projectData, snapshotQuery));
             projectItemBuilder.children(projectChildrenItems.isEmpty() ? null : projectChildrenItems);
             snapItems.add(projectItemBuilder.build());
         }
         return snapItems;
     }
 
-    private List<SnapItem> loadProjectAssetItems(){return null;}
-    private List<SnapItem> loadProjectResourceItems(){return null;}
-    private List<SnapItem> loadSubjectResourceItems(){return null;}
+    private List<SnapItem> loadProjectResourceItems(final XnatProjectdata projectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+        List<SnapItem> snapItems = new ArrayList<>();
+        Boolean loadAllResources = snapshotQuery.getResources() == null || snapshotQuery.getResources().isEmpty();
+        for (final XnatAbstractresourceI xnatAbstractresourceI : projectData.getResources_resource()) {
+            if (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getLabel())) {
+                SnapItem.SnapItemBuilder resourceItemBuilder = SnapItem.builder()
+                        .id(Integer.toString(xnatAbstractresourceI.getXnatAbstractresourceId()))
+                        .label(xnatAbstractresourceI.getLabel())
+                        .xnatType(SnapItem.XnatType.RESOURCE)
+                        .fileType(SnapItem.FileType.DIRECTORY)
+                        .xsiType(xnatAbstractresourceI.getXSIType());
+                addResourcePath(resourceItemBuilder, xnatAbstractresourceI);
+                snapItems.add(resourceItemBuilder.build());
+            }
+        }
+        return snapItems;
+    }
 
-    private List<SnapItem> loadExperimentItems(XnatProjectdata projectData, SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    // No need to create SnapItem for subjects, just load the subject resource items
+    private List<SnapItem> loadSubjectItems(final XnatProjectdata projectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+        ArrayList<XnatSubjectdata> subjectsData = projectData.getParticipants_participant();
+        return subjectsData.stream()
+                .flatMap(sd -> loadSubjectResourceItems(sd, snapshotQuery).stream())
+                .collect(Collectors.toList());
+    }
+
+    private List<SnapItem> loadSubjectResourceItems(final XnatSubjectdata subjectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+        List<SnapItem> snapItems = new ArrayList<>();
+        Boolean loadAllResources = snapshotQuery.getResources() == null || snapshotQuery.getResources().isEmpty();
+        for (final XnatAbstractresourceI xnatAbstractresourceI : subjectData.getResources_resource()) {
+            if (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getLabel())) {
+                SnapItem.SnapItemBuilder resourceItemBuilder = SnapItem.builder()
+                        .id(Integer.toString(xnatAbstractresourceI.getXnatAbstractresourceId()))
+                        .label(xnatAbstractresourceI.getLabel())
+                        .xnatType(SnapItem.XnatType.RESOURCE)
+                        .fileType(SnapItem.FileType.DIRECTORY)
+                        .xsiType(xnatAbstractresourceI.getXSIType());
+                addResourcePath(resourceItemBuilder, xnatAbstractresourceI);
+                snapItems.add(resourceItemBuilder.build());
+            }
+        }
+        return snapItems;
+    }
+
+    private List<SnapItem> loadExperimentItems(final XnatProjectdata projectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         Boolean loadAllDataTypes = snapshotQuery.getDataTypes() == null || snapshotQuery.getDataTypes().isEmpty();
         ArrayList<XnatExperimentdata> experiments = projectData.getExperiments();
         log.debug(loadAllDataTypes ? "All" : snapshotQuery.getDataTypes().toString());
         List<SnapItem> snapItems = new ArrayList<>();
         for (XnatExperimentdata experiment : experiments) {
             if (loadAllDataTypes || snapshotQuery.getDataTypes().contains(experiment.getXSIType())) {
-                //TODO: Add cached datatype permissions check
                 SnapItem.SnapItemBuilder experimentItemBuilder = SnapItem.builder()
                         .id(experiment.getId())
                         .label(experiment.getLabel())
@@ -191,24 +234,25 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         return snapItems;
     }
 
-    private List<SnapItem> loadExperimentResourceItems(XnatExperimentdata experimentData, SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadExperimentResourceItems(final XnatExperimentdata experimentData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         Boolean loadAllResources = snapshotQuery.getResources() == null || snapshotQuery.getResources().isEmpty();
         ArrayList<SnapItem> snapItems = new ArrayList<>();
         for (final XnatAbstractresourceI xnatAbstractresourceI : experimentData.getResources_resource()) {
-            if (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getXSIType())) {
+            if (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getLabel())) {
                 SnapItem.SnapItemBuilder resourceItemBuilder = SnapItem.builder()
                         .id(Integer.toString(xnatAbstractresourceI.getXnatAbstractresourceId()))
                         .label(xnatAbstractresourceI.getLabel())
                         .xnatType(SnapItem.XnatType.RESOURCE)
                         .fileType(SnapItem.FileType.DIRECTORY)
                         .xsiType(xnatAbstractresourceI.getXSIType());
+                addResourcePath(resourceItemBuilder, xnatAbstractresourceI);
                 snapItems.add(resourceItemBuilder.build());
             }
         }
         return snapItems;
     }
 
-    private List<SnapItem> loadScanItems(XnatImagesessiondataI imageSessionData, SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadScanItems(final XnatImagesessiondataI imageSessionData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         ArrayList<SnapItem> snapItems = new ArrayList<>();
         for (final XnatImagescandataI scanData : imageSessionData.getScans_scan()) {
             SnapItem.SnapItemBuilder scanItemBuilder = SnapItem.builder()
@@ -225,34 +269,37 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         return snapItems;
     }
 
-    private List<SnapItem> loadScanResourceItems(XnatImagescandata scanData, SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadScanResourceItems(final XnatImagescandata scanData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         Boolean loadAllResources = snapshotQuery.getResources() == null || snapshotQuery.getResources().isEmpty();
         ArrayList<SnapItem> snapItems = new ArrayList<>();
         for (final XnatAbstractresourceI xnatAbstractresourceI : scanData.getFile()) {
             if (xnatAbstractresourceI instanceof XnatResourcecatalog &&
-                    (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getXSIType()))) {
+                    (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getLabel()))) {
                 SnapItem.SnapItemBuilder resourceItemBuilder = SnapItem.builder()
                         .id(Integer.toString(xnatAbstractresourceI.getXnatAbstractresourceId()))
                         .label(xnatAbstractresourceI.getLabel())
                         .xnatType(SnapItem.XnatType.RESOURCE)
                         .fileType(SnapItem.FileType.DIRECTORY)
                         .xsiType(xnatAbstractresourceI.getXSIType());
-                try {
-                    resourceItemBuilder.path(
-                            Paths.get(((XnatResourcecatalog) xnatAbstractresourceI).getFullPath(null))
-                                    .getParent().toString());
-                } catch (Exception e) {log.error("Could not get resource path", e); }
+                addResourcePath(resourceItemBuilder, xnatAbstractresourceI);
                 snapItems.add(resourceItemBuilder.build());
             }
         }
         return snapItems;
     }
 
+    private void addResourcePath(SnapItem.SnapItemBuilder resourceItemBuilder, final XnatAbstractresourceI xnatAbstractresourceI) {
+        try {
+            resourceItemBuilder.path(
+                    Paths.get(((XnatResourcecatalog) xnatAbstractresourceI).getFullPath(null))
+                            .getParent().toString());
+        } catch (Exception e) {log.error("Could not get resource path", e); }
+    }
 
-    private static Optional<String> findCommonRoot(List<String> paths) {
+    private static Optional<String> findCommonRoot(final List<String> paths) {
         return findCommonRoot(paths.stream());
     }
-    private static Optional<String> findCommonRoot(Stream<String> paths) {
+    private static Optional<String> findCommonRoot(final Stream<String> paths) {
         return paths
                 .filter(Objects::nonNull)
                 .map(Paths::get)
@@ -260,7 +307,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                 .map(Path::toString);
     }
 
-    private static Path getCommonPath(Path path1, Path path2) {
+    private static Path getCommonPath(final Path path1, final Path path2) {
         int len = Math.min(path1.getNameCount(), path2.getNameCount());
         Path common = path1.getRoot();
         for (int i = 0; i < len; i++) {

@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonPropertyOrder({"id", "label", "description", "root-path", "path-root-key", "base-type", "content"})
+@JsonPropertyOrder({"id", "label", "file-type", "xnat-type", "xsi-type", "children"})
 public class SnapItem implements Serializable {
     @Nullable private String id;
     @Nullable private String label;
