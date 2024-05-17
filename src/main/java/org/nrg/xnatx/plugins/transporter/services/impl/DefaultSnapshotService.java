@@ -17,16 +17,8 @@ import org.nrg.xnatx.plugins.transporter.services.TransporterConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
-import javax.annotation.Nonnull;
 
 @Slf4j
 @Service
@@ -78,7 +70,6 @@ public class DefaultSnapshotService implements SnapshotService {
     public MirroredSnapshot mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception {
         return snapshotResolutionService.mirrorSnapshot(resolvedSnapshot);
     }
-
 
 
     private void checkReadPermissions(UserI userI, List<String> projects, List<String> dataTypes) throws SnapshotPermissionsException {

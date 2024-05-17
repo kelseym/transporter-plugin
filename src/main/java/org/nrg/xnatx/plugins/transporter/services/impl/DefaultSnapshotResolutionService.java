@@ -63,10 +63,12 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                     try {
                         Path sourcePath = originalRootPath.resolve(snapItem.getPath());
                         Path destinationPath = targetPath.resolve(snapItem.getPath());
-                        if (Files.exists(destinationPath)) {
-                            throw new IOException("Destination path already exists: " + destinationPath.toString());
-                        } else if (!Files.isDirectory(sourcePath)) {
+                        if (!Files.isDirectory(sourcePath)) {
                             throw new IOException("Source directory path is not a directory type: " + sourcePath.toString());
+                        } else
+                            // Check if the destination path already exists and is not the same as the target path
+                            if (Files.exists(destinationPath)) {
+                            throw new IOException("Destination path already exists: " + destinationPath.toString());
                         } else {
                             Files.createDirectories(destinationPath.getParent());
                             Files.createSymbolicLink(destinationPath, sourcePath);
@@ -78,11 +80,11 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                     }
                 });
 
-        return null;
+        return MirroredSnapshot.create(resolvedSnapshot, targetPath.toString());
     }
 
     @Override
-    public ResolvedSnapshot resolveSnapshotDefinition(final SnapshotDefinition snapshotDefinition, final UserI userI) {
+    public ResolvedSnapshot resolveSnapshotDefinition(SnapshotDefinition snapshotDefinition, final UserI userI) {
         // Resolve the snapshot definition into a snapshot query object
         SnapshotDefinition.SnapshotQuery snapshotQuery = new SnapshotDefinition.SnapshotQuery(userI, snapshotDefinition);
 
@@ -94,7 +96,24 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
 
         // Find the common root path for the snapshot items and transform snapshot to root and relative paths
         List<String> itemPaths =
-                resolvedSnapshot.streamSnapItems().map(SnapItem::getPath).collect(Collectors.toList());
+                resolvedSnapshot.streamSnapItems()
+                        .filter(Objects::nonNull)
+                        .map(SnapItem::getPath)
+                        .distinct()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+        // Check for the special case that the common root path is the only path in our snapshot
+        // This would result in the no resource/data directories to be mirror, only the contained files
+        if (Strings.isNullOrEmpty(snapshotDefinition.getPathRootKey()) &&
+                itemPaths.size() == 1) {
+            try {
+                snapshotDefinition.setPathRootKey(
+                        Paths.get(itemPaths.get(0)).getFileName().toString());
+            } catch (Exception e) {
+                log.error("Single path snapshot. Could not derive valid path root key.", e);
+                log.error("Define a valid path root key in the snapshot definition.");
+            }
+        }
         Optional<String> commonRoot = Strings.isNullOrEmpty(snapshotDefinition.getPathRootKey()) ?
                 findCommonRoot(itemPaths) :
                 findKeyedRoot(findCommonRoot(itemPaths), snapshotDefinition.getPathRootKey());

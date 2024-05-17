@@ -11,12 +11,15 @@ import java.util.Date;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class MirroredSnapshot extends ResolvedSnapshot {
-    static public MirroredSnapshot create(ResolvedSnapshot resolvedSnapshot) {
+
+    static public MirroredSnapshot create(ResolvedSnapshot resolvedSnapshot, String updatedRootPath) {
         MirroredSnapshot mirroredSnapshot = new MirroredSnapshot();
         mirroredSnapshot.setSnapshotDefinition(resolvedSnapshot.getSnapshotDefinition());
         mirroredSnapshot.setCreated(new Date());
         mirroredSnapshot.setUpdated(new Date());
-        mirroredSnapshot.setRootPath(resolvedSnapshot.getRootPath());
+        mirroredSnapshot.setRootPath(updatedRootPath);
+        mirroredSnapshot.setContent(resolvedSnapshot.getContent());
         return mirroredSnapshot;
     }
+
 }
