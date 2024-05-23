@@ -25,7 +25,7 @@ import java.util.List;
 public class SnapshotRequest {
     @Nullable @JsonProperty("label") private String label;
     @Nullable @JsonProperty("description") private String description;
-    @Nullable @JsonProperty("path-root-key") private String pathRootKey;
+    @Nullable @JsonProperty("hierarchy") private SnapshotDefinition.HierarchyScheme hierarchy;
     @Nullable @JsonProperty("projects") private List<String> projects;
     @Nullable @JsonProperty("data-types") private List<String> dataTypes;
     @Nullable @JsonProperty("resources") private List<String> resources;

@@ -7,9 +7,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.stream.Stream;
 
 @Data
 @Builder(toBuilder = true)
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({"id", "label", "file-type", "xnat-type", "xsi-type", "children"})
@@ -28,6 +31,7 @@ public class SnapItem implements Serializable {
     @Nullable @JsonProperty("xsi-type") private String xsiType;
     private String uri;
     @Nullable @JsonProperty("path") private String path;
+    @Nullable @JsonProperty("relative-path") private String relativePath;
     @Nullable private List<SnapItem> children;
 
     public enum FileType {
@@ -38,10 +42,10 @@ public class SnapItem implements Serializable {
     public enum XnatType {
         PROJECT,
         SUBJECT,
-        SESSION,
+        //SESSION,
         EXPERIMENT,
         SCAN,
-        ASSESSOR,
+        //ASSESSOR,
         RESOURCE,
         FILE
     }

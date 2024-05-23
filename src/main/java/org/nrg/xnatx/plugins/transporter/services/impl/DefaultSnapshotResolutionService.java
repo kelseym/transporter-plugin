@@ -1,16 +1,11 @@
 package org.nrg.xnatx.plugins.transporter.services.impl;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.nrg.xdat.model.XnatAbstractresourceI;
-import org.nrg.xdat.model.XnatImagescandataI;
-import org.nrg.xdat.model.XnatImagesessiondataI;
-import org.nrg.xdat.om.XnatExperimentdata;
-import org.nrg.xdat.om.XnatImagescandata;
-import org.nrg.xdat.om.XnatProjectdata;
-import org.nrg.xdat.om.XnatResourcecatalog;
-import org.nrg.xdat.om.XnatSubjectdata;
+import org.nrg.xdat.model.*;
+import org.nrg.xdat.om.*;
 import org.nrg.xdat.om.base.BaseXnatExperimentdata;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnat.exceptions.InvalidArchiveStructure;
@@ -25,13 +20,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.nrg.xnatx.plugins.transporter.model.SnapshotDefinition.HierarchyScheme;
+import org.springframework.util.CollectionUtils;
+
+import static org.nrg.xnatx.plugins.transporter.model.SnapshotDefinition.HierarchyScheme.*;
 
 @Slf4j
 @Service
@@ -53,16 +49,26 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
 
     //** Snapshot Mirroring Methods **//
     private MirroredSnapshot mirrorSnapshot(final ResolvedSnapshot resolvedSnapshot, @Nonnull Path targetPath) throws Exception {
-        Path originalRootPath = Paths.get(
-                Strings.isNullOrEmpty(resolvedSnapshot.getRootPath()) ?
-                        Paths.get("/").toString() : resolvedSnapshot.getRootPath());
 
-        // Mirror resource directories
-        resolvedSnapshot.streamSnapItems(SnapItem.FileType.DIRECTORY)
-                .filter(si -> si.getXnatType().equals(SnapItem.XnatType.RESOURCE)).forEach(snapItem -> {
+        Map<Integer, Path> relativeSnapshotPathMap = resolveSnapshotTargetHierarchy(
+                resolvedSnapshot.getSnapshotDefinition().getHierarchyScheme(), resolvedSnapshot, null);
+
+        // Mirror resource directories of project, subject, and experiment items - depending on the hierarchy scheme
+
+        MirroredSnapshot mirroredSnapshot = MirroredSnapshot.create(resolvedSnapshot, targetPath.toString());
+        mirroredSnapshot.streamSnapItems(SnapItem.FileType.DIRECTORY)
+                .filter(si -> si.getXnatType().equals(SnapItem.XnatType.RESOURCE))
+                .filter(si -> relativeSnapshotPathMap.containsKey(si.hashCode()))
+                .forEach(snapItem -> {
                     try {
-                        Path sourcePath = originalRootPath.resolve(snapItem.getPath());
-                        Path destinationPath = targetPath.resolve(snapItem.getPath());
+                        if (snapItem.getPath() == null) {
+                            log.error("Resource path for {} is null", snapItem.getLabel());
+                            throw new IOException("Resource path is null");
+                        }
+                        Path sourcePath = Paths.get(snapItem.getPath());
+                        Path snapshotRelativePath = relativeSnapshotPathMap.get(snapItem.hashCode());
+                        snapItem.setRelativePath(snapshotRelativePath.toString());
+                        Path destinationPath = targetPath.resolve(snapshotRelativePath);
                         if (!Files.isDirectory(sourcePath)) {
                             throw new IOException("Source directory path is not a directory type: " + sourcePath.toString());
                         } else
@@ -80,7 +86,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                     }
                 });
 
-        return MirroredSnapshot.create(resolvedSnapshot, targetPath.toString());
+        return mirroredSnapshot;
     }
 
     @Override
@@ -94,47 +100,108 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                 .content(loadProjectItems(snapshotQuery))
                 .build();
 
-        // Find the common root path for the snapshot items and transform snapshot to root and relative paths
-        List<String> itemPaths =
-                resolvedSnapshot.streamSnapItems()
-                        .filter(Objects::nonNull)
-                        .map(SnapItem::getPath)
-                        .distinct()
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
-        // Check for the special case that the common root path is the only path in our snapshot
-        // This would result in the no resource/data directories to be mirror, only the contained files
-        if (Strings.isNullOrEmpty(snapshotDefinition.getPathRootKey()) &&
-                itemPaths.size() == 1) {
-            try {
-                snapshotDefinition.setPathRootKey(
-                        Paths.get(itemPaths.get(0)).getFileName().toString());
-            } catch (Exception e) {
-                log.error("Single path snapshot. Could not derive valid path root key.", e);
-                log.error("Define a valid path root key in the snapshot definition.");
-            }
-        }
-        Optional<String> commonRoot = Strings.isNullOrEmpty(snapshotDefinition.getPathRootKey()) ?
-                findCommonRoot(itemPaths) :
-                findKeyedRoot(findCommonRoot(itemPaths), snapshotDefinition.getPathRootKey());
-        try {
-            if (commonRoot.isPresent()){
-                Path root = Paths.get(commonRoot.get());
-                for (SnapItem snapItem: resolvedSnapshot.streamSnapItems()
-                        .filter(Objects::nonNull)
-                        .filter(si -> si.getPath() != null && !Strings.isNullOrEmpty(si.getPath()))
-                        .collect(Collectors.toList())) {
-                    Path path = Paths.get(snapItem.getPath());
-                    Path relPath = root.relativize(path);
-                    snapItem.setPath(relPath.toString());
-                }
-                resolvedSnapshot.setRootPath(commonRoot.get());
-            }
-        } catch (Throwable e) {
-            log.error("Error resolving data snap", e.getMessage());
-        }
         return resolvedSnapshot;
     }
+
+    private Map<Integer, Path> resolveSnapshotTargetHierarchy(final HierarchyScheme hierarchyScheme,
+                                                               final ResolvedSnapshot resolvedSnapshot,
+                                                               final Path targetPath) {
+        List<SnapItem> rootItems;
+        switch (hierarchyScheme) {
+            case PROJECT_SUBJECT:
+            case PROJECT_EXPERIMENT:
+                rootItems = resolvedSnapshot.streamSnapItems(SnapItem.XnatType.PROJECT)
+                        .collect(Collectors.toList());
+                break;
+            case SUBJECT:
+                rootItems = resolvedSnapshot.streamSnapItems(SnapItem.XnatType.SUBJECT)
+                        .collect(Collectors.toList());
+                break;
+            case EXPERIMENT:
+                rootItems = resolvedSnapshot.streamSnapItems(SnapItem.XnatType.EXPERIMENT)
+                        .collect(Collectors.toList());
+                break;
+            default:
+                rootItems = Collections.emptyList();
+                log.error("Unimplemented HierarchyScheme found in resolveSnapshotTargetHierarchy: {}", hierarchyScheme);
+        }
+        return targetPathBuilder(targetPath == null ? Paths.get("") : targetPath, rootItems, hierarchyScheme);
+    }
+
+    private Map<Integer, Path> targetPathBuilder(final Path parentPath, final SnapItem snapItem, HierarchyScheme hierarchyScheme) {
+        SnapItem.XnatType xnatType = snapItem.getXnatType();
+        String nodePath = "";
+        switch (xnatType) {
+            case PROJECT:
+                if (hierarchyScheme.equals(PROJECT_SUBJECT) | hierarchyScheme.equals(HierarchyScheme.PROJECT_EXPERIMENT)) {
+                    nodePath = snapItem.getId();
+                }
+                return targetPathBuilder(parentPath.resolve(nodePath), snapItem.getChildren(), hierarchyScheme);
+            case SUBJECT:
+                List<SnapItem> childItems;
+                if (hierarchyScheme.equals(PROJECT_SUBJECT) | hierarchyScheme.equals(HierarchyScheme.SUBJECT)) {
+                    nodePath = snapItem.getId();
+                    childItems = snapItem.getChildren();
+                } else {
+                    // If the hierarchy scheme doesn't include subjects, only pass along experiment children
+                    childItems = snapItem.getChildren().stream()
+                            .filter(si -> SnapItem.XnatType.EXPERIMENT.equals(si.getXnatType()))
+                            .collect(Collectors.toList());
+                }
+                return targetPathBuilder(parentPath.resolve(nodePath), childItems, hierarchyScheme);
+            case RESOURCE:
+                // Resource paths are formed from the parent path + resource id
+                return Collections.singletonMap(snapItem.hashCode(), parentPath.resolve(snapItem.getLabel()));
+            default:
+                log.error("Unimplemented XnatType found in targetPathBuilder: " + xnatType);
+            case EXPERIMENT:
+                return targetPathBuilder(parentPath.resolve(snapItem.getLabel()), snapItem.getChildren(), hierarchyScheme);
+            case SCAN:
+                return targetPathBuilder(parentPath.resolve(snapItem.getId()), snapItem.getChildren(), hierarchyScheme);
+        }
+    }
+
+    private Map<Integer, Path> targetPathBuilder(final Path parentPath, final List<SnapItem> snapItems, HierarchyScheme hierarchyScheme) {
+        return snapItems == null || snapItems.isEmpty() ? Collections.emptyMap() :
+                snapItems.stream()
+                        .map(snapItem -> targetPathBuilder(parentPath, snapItem, hierarchyScheme))
+                        .flatMap(map -> map.entrySet().stream())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+
+
+    //private void setCommonRootPath(ResolvedSnapshot resolvedSnapshot, SnapshotDefinition snapshotDefinition) {
+//
+    //    // Find the common root path for the snapshot items and transform snapshot to root and relative paths
+    //    List<String> itemPaths =
+    //            resolvedSnapshot.streamSnapItems()
+    //                    .filter(Objects::nonNull)
+    //                    .map(SnapItem::getPath)
+    //                    .distinct()
+    //                    .filter(Objects::nonNull)
+    //                    .collect(Collectors.toList());
+//
+    //    Optional<String> commonRoot = Strings.isNullOrEmpty(""snapshotDefinition.getPathRootKey()"") ?
+    //            findCommonRoot(itemPaths) :
+    //            findKeyedRoot(findCommonRoot(itemPaths), snapshotDefinition.getPathRootKey());
+    //    try {
+    //        if (commonRoot.isPresent()){
+    //            Path root = Paths.get(commonRoot.get());
+    //            for (SnapItem snapItem: resolvedSnapshot.streamSnapItems()
+    //                    .filter(Objects::nonNull)
+    //                    .filter(si -> si.getPath() != null && !Strings.isNullOrEmpty(si.getPath()))
+    //                    .collect(Collectors.toList())) {
+    //                Path path = Paths.get(snapItem.getPath());
+    //                Path relPath = root.relativize(path);
+    //                snapItem.setPath(relPath.toString());
+    //            }
+    //            resolvedSnapshot.setRootPath(commonRoot.get());
+    //        }
+    //    } catch (Throwable e) {
+    //        log.error("Error resolving data snap", e.getMessage());
+    //    }
+    //}
 
     private Path getNewSnapshotDirectory() throws IOException {
         final String rootBuildPath = snapshotPreferences.getSnapshotPath();
@@ -164,25 +231,35 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                     .label(projectData.getName())
                     .xnatType(SnapItem.XnatType.PROJECT)
                     .xsiType(projectData.getXSIType());
-            //try {
-            //    projectItemBuilder.path(projectData.getRootArchivePath() + projectData.getCurrentArc());
-            //} catch (NullPointerException e) {
-            //    log.error("Project could not get root archive path", e);
+            try {
+                projectItemBuilder.path(projectData.getRootArchivePath() + projectData.getCurrentArc());
+            } catch (NullPointerException e) {
+                log.error("Project could not get root archive path", e);
+            }
+            // Load subject resources if the hierarchy scheme includes subjects
+            List<SnapItem> projectChildrenItems = new ArrayList<>();
+            //if (snapshotQuery.getHierarchyScheme().equals(PROJECT_SUBJECT) || snapshotQuery.getHierarchyScheme().equals(SUBJECT)) {
+                projectChildrenItems.addAll(loadProjectResourceItems(projectData.getResources_resource(), snapshotQuery));
+                // Load subject assessors
+                projectChildrenItems.addAll(loadSubjectItems(projectData.getParticipants_participant(), snapshotQuery));
             //}
-            // Load project children
-            List<SnapItem> projectChildrenItems = loadExperimentItems(projectData, snapshotQuery);
-            projectChildrenItems.addAll(loadProjectResourceItems(projectData, snapshotQuery));
-            projectChildrenItems.addAll(loadSubjectItems(projectData, snapshotQuery));
+            // Load other experiments - e.g. shared experiments not associated with a subject
+            projectChildrenItems.addAll(
+                    loadExperimentItems(projectData.getExperiments(), snapshotQuery,
+                            projectChildrenItems.stream().flatMap(si -> si.getChildren().stream())
+                                    .filter(si -> SnapItem.XnatType.EXPERIMENT.equals(si.getXnatType()))
+                                    .map(SnapItem::getId)
+                                    .collect(Collectors.toList())));
             projectItemBuilder.children(projectChildrenItems.isEmpty() ? null : projectChildrenItems);
             snapItems.add(projectItemBuilder.build());
         }
         return snapItems;
     }
 
-    private List<SnapItem> loadProjectResourceItems(final XnatProjectdata projectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadProjectResourceItems(final List<XnatAbstractresourceI> projectResources, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         List<SnapItem> snapItems = new ArrayList<>();
         Boolean loadAllResources = snapshotQuery.getResources() == null || snapshotQuery.getResources().isEmpty();
-        for (final XnatAbstractresourceI xnatAbstractresourceI : projectData.getResources_resource()) {
+        for (final XnatAbstractresourceI xnatAbstractresourceI : projectResources) {
             if (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getLabel())) {
                 SnapItem.SnapItemBuilder resourceItemBuilder = SnapItem.builder()
                         .id(Integer.toString(xnatAbstractresourceI.getXnatAbstractresourceId()))
@@ -198,17 +275,26 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
     }
 
     // No need to create SnapItem for subjects, just load the subject resource items
-    private List<SnapItem> loadSubjectItems(final XnatProjectdata projectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
-        ArrayList<XnatSubjectdata> subjectsData = projectData.getParticipants_participant();
-        return subjectsData.stream()
-                .flatMap(sd -> loadSubjectResourceItems(sd, snapshotQuery).stream())
-                .collect(Collectors.toList());
+    private List<SnapItem> loadSubjectItems(final List<XnatSubjectdata> subjectsData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+        List<SnapItem> subjectSnapItems = new ArrayList<>();
+        subjectsData.forEach(subjectData -> {
+            SnapItem.SnapItemBuilder subjectItemBuilder = SnapItem.builder()
+                    .id(subjectData.getId())
+                    .label(subjectData.getLabel())
+                    .xnatType(SnapItem.XnatType.SUBJECT)
+                    .xsiType(subjectData.getXSIType());
+            List<SnapItem> subjectChildItems = loadSubjectResourceItems(subjectData.getResources_resource(), snapshotQuery);
+            subjectChildItems.addAll(loadSubjectAssessorItems(subjectData.getExperiments_experiment(), snapshotQuery));
+            subjectItemBuilder.children(subjectChildItems);
+            subjectSnapItems.add(subjectItemBuilder.build());
+        });
+        return subjectSnapItems;
     }
 
-    private List<SnapItem> loadSubjectResourceItems(final XnatSubjectdata subjectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadSubjectResourceItems(final List<XnatAbstractresourceI> subjectResources, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         List<SnapItem> snapItems = new ArrayList<>();
         Boolean loadAllResources = snapshotQuery.getResources() == null || snapshotQuery.getResources().isEmpty();
-        for (final XnatAbstractresourceI xnatAbstractresourceI : subjectData.getResources_resource()) {
+        for (final XnatAbstractresourceI xnatAbstractresourceI : subjectResources) {
             if (loadAllResources || snapshotQuery.getResources().contains(xnatAbstractresourceI.getLabel())) {
                 SnapItem.SnapItemBuilder resourceItemBuilder = SnapItem.builder()
                         .id(Integer.toString(xnatAbstractresourceI.getXnatAbstractresourceId()))
@@ -223,37 +309,41 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         return snapItems;
     }
 
-    private List<SnapItem> loadExperimentItems(final XnatProjectdata projectData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadSubjectAssessorItems(final List<XnatSubjectassessordataI> subjectAssessors, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+        return loadExperimentItems(subjectAssessors.stream()
+                .map(sa -> (XnatExperimentdata) sa)
+                .collect(Collectors.toList()), snapshotQuery, null);
+    }
+
+    private List<SnapItem> loadExperimentItems(final List<XnatExperimentdata> experiments,
+                                               final SnapshotDefinition.SnapshotQuery snapshotQuery,
+                                               final List<String> excludeIds) {
         Boolean loadAllDataTypes = snapshotQuery.getDataTypes() == null || snapshotQuery.getDataTypes().isEmpty();
-        ArrayList<XnatExperimentdata> experiments = projectData.getExperiments();
         log.debug(loadAllDataTypes ? "All" : snapshotQuery.getDataTypes().toString());
         List<SnapItem> snapItems = new ArrayList<>();
-        for (XnatExperimentdata experiment : experiments) {
-            if (loadAllDataTypes || snapshotQuery.getDataTypes().contains(experiment.getXSIType())) {
-                SnapItem.SnapItemBuilder experimentItemBuilder = SnapItem.builder()
-                        .id(experiment.getId())
-                        .label(experiment.getLabel())
-                        .xnatType(SnapItem.XnatType.EXPERIMENT)
-                        .xsiType(experiment.getXSIType());
-                //try {
-                //    experimentItemBuilder.path(experiment.getCurrentSessionFolder(true));
-                //} catch (InvalidArchiveStructure | BaseXnatExperimentdata.UnknownPrimaryProjectException e) {
-                //    log.error("Experiment could not get current session folder", e);}
-                // Load experiment children
-                List<SnapItem> experimentChildrenItems = loadExperimentResourceItems(experiment, snapshotQuery);
-                if (experiment instanceof XnatImagesessiondataI) {
-                    experimentChildrenItems.addAll(loadScanItems((XnatImagesessiondataI) experiment, snapshotQuery));
-                }
-                snapItems.add(
-                        experimentItemBuilder
-                                .children(experimentChildrenItems.isEmpty() ? null : experimentChildrenItems)
-                                .build());
-            }
-        }
+        experiments.stream()
+                .filter(experiment -> excludeIds == null || !excludeIds.contains(experiment.getId()))
+                .filter(experiment -> loadAllDataTypes || snapshotQuery.getDataTypes().contains(experiment.getXSIType()))
+                .forEach(experiment -> {
+                    SnapItem.SnapItemBuilder experimentItemBuilder = SnapItem.builder()
+                            .id(experiment.getId())
+                            .label(experiment.getLabel())
+                            .xnatType(SnapItem.XnatType.EXPERIMENT)
+                            .xsiType(experiment.getXSIType());
+                    List<SnapItem> experimentChildItems = loadExperimentResourceItems(experiment, snapshotQuery);
+                    if (experiment instanceof XnatImagesessiondataI) {
+                        experimentChildItems.addAll(loadScanItems((XnatImagesessiondataI) experiment, snapshotQuery));
+                    }
+                    snapItems.add(
+                            experimentItemBuilder
+                                    .children(experimentChildItems.isEmpty() ? null : experimentChildItems)
+                                    .build());
+        });
         return snapItems;
     }
 
-    private List<SnapItem> loadExperimentResourceItems(final XnatExperimentdata experimentData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+
+    private List<SnapItem> loadExperimentResourceItems(final XnatExperimentdataI experimentData, final SnapshotDefinition.SnapshotQuery snapshotQuery) {
         Boolean loadAllResources = snapshotQuery.getResources() == null || snapshotQuery.getResources().isEmpty();
         ArrayList<SnapItem> snapItems = new ArrayList<>();
         for (final XnatAbstractresourceI xnatAbstractresourceI : experimentData.getResources_resource()) {

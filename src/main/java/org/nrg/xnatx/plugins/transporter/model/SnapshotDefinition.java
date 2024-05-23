@@ -1,13 +1,10 @@
 package org.nrg.xnatx.plugins.transporter.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.nrg.xft.security.UserI;
 
@@ -26,13 +23,13 @@ import java.util.List;
 @JsonPropertyOrder()
 public class SnapshotDefinition implements Serializable {
 
-    @Nullable @JsonProperty("id") private Long id;
+    @Nullable
+    @JsonProperty("id") private Long id;
     @JsonProperty("label") private String label;
-    @Nullable @JsonProperty("description") private String description;
-
-    @Nullable  @JsonProperty("path-root-key") private String pathRootKey;
-    @JsonProperty("base-type") private String baseType; // FILE || RESOURCE
-
+    @Nullable
+    @JsonProperty("description") private String description;
+    @JsonIgnore
+    @JsonProperty("hierarchy-scheme") private HierarchyScheme hierarchyScheme; // PROJECT_SUBJECT || PROJECT_EXPERIMENT || SUBJECT || EXPERIMENT
 
     @JsonProperty("projects") private List<String> projects;
     @JsonProperty("data-types") private List<String> dataTypes;
@@ -53,8 +50,8 @@ public class SnapshotDefinition implements Serializable {
                         request.getLabel() :
                         generateLabel(request))
                 .description(request.getDescription())
-                .pathRootKey(request.getPathRootKey())
-                .baseType("RESOURCE")
+                .hierarchyScheme(
+                        request.getHierarchy() != null ? request.getHierarchy() : HierarchyScheme.PROJECT_EXPERIMENT)
                 .projects(request.getProjects())
                 .dataTypes(request.getDataTypes())
                 .resources(request.getResources())
@@ -80,6 +77,19 @@ public class SnapshotDefinition implements Serializable {
             labelBuilder.append(String.join("-", request.getResources()));
         }
         return labelBuilder.toString();
+    }
+
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum HierarchyScheme {
+        PROJECT_SUBJECT("Project/Resource|Subject/Resource|Experiment/Resource|Scan/Resource", 1),
+        PROJECT_EXPERIMENT("Project/Resource|Experiment/Resource|Scan/Resource", 2),
+        SUBJECT("Subject/Resource|Experiment/Resource|Scan/Resource", 3),
+        EXPERIMENT("Experiment/Resource|Scan/Resource", 4);
+
+        private final String description;
+        private final int code;
     }
 
     @Data
