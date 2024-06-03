@@ -11,8 +11,10 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Data
@@ -38,6 +40,21 @@ public class ResolvedSnapshot {
     public void update() {
         this.updated = new Date();
     }
+
+    public List<String> getDatatypes() {
+        List<String> datatypes = snapshotDefinition.getDataTypes();
+        datatypes.addAll(snapshotDefinition.getResources());
+        return datatypes;
+    }
+
+    public List<String> getScanDatatypes() {
+        return streamSnapItems(SnapItem.XnatType.SCAN).map(SnapItem::getXsiType).collect(Collectors.toList());
+    }
+
+    public List<String> getExperimentsDatatypes() {
+        return streamSnapItems(SnapItem.XnatType.EXPERIMENT).map(SnapItem::getXsiType).collect(Collectors.toList());
+    }
+
 
     @JsonIgnore
     public Stream<SnapItem> streamSnapItems(SnapItem.XnatType... xnatTypes) {

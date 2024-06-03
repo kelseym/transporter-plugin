@@ -52,6 +52,7 @@ public class SnapItem implements Serializable {
 
     @JsonIgnore
     public Stream<SnapItem> flatten(XnatType... xnatTypes) {
+        // TODO: Speed up flatten functions by being smart about type hierarchy, e.g. If you are looking for a subject, don't look past the project level
         return Stream.concat(
                 xnatTypes.length == 0 || Arrays.stream(xnatTypes).anyMatch(xnatType -> xnatType.equals(this.xnatType)) ?
                         Stream.of(this) : Stream.empty(),

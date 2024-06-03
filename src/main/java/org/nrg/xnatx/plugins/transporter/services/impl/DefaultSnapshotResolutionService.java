@@ -80,7 +80,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
                             Files.createSymbolicLink(destinationPath, sourcePath);
                         }
                     } catch (IOException e) {
-                        log.error("Could not mirror resource directory: " + snapItem.getPath());
+                        log.error("Could not mirror resource directory: {}", snapItem.getPath());
                         log.error(e.getMessage());
                         throw new RuntimeException("Could not mirror resource directory", e);
                     }
