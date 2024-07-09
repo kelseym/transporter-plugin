@@ -97,7 +97,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         // Resolve snapshot member item details
         ResolvedSnapshot resolvedSnapshot = ResolvedSnapshot.builder()
                 .snapshotDefinition(snapshotDefinition)
-                .content(loadProjectItems(snapshotQuery))
+                .content(loadProjectItems(snapshotQuery, snapshotDefinition.getHierarchyScheme()))
                 .build();
 
         return resolvedSnapshot;
@@ -219,7 +219,7 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         return created;
     }
 
-    private List<SnapItem> loadProjectItems(final SnapshotDefinition.SnapshotQuery snapshotQuery) {
+    private List<SnapItem> loadProjectItems(final SnapshotDefinition.SnapshotQuery snapshotQuery, HierarchyScheme hierarchyScheme) {
         List<SnapItem> snapItems = new ArrayList<>();
         for (XnatProjectdata projectData :
                 snapshotQuery.getProjects().stream()
@@ -238,11 +238,11 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
             }
             // Load subject resources if the hierarchy scheme includes subjects
             List<SnapItem> projectChildrenItems = new ArrayList<>();
-            //if (snapshotQuery.getHierarchyScheme().equals(PROJECT_SUBJECT) || snapshotQuery.getHierarchyScheme().equals(SUBJECT)) {
+            if (hierarchyScheme.equals(PROJECT_SUBJECT) || hierarchyScheme.equals(SUBJECT)) {
                 projectChildrenItems.addAll(loadProjectResourceItems(projectData.getResources_resource(), snapshotQuery));
                 // Load subject assessors
                 projectChildrenItems.addAll(loadSubjectItems(projectData.getParticipants_participant(), snapshotQuery));
-            //}
+            }
             // Load other experiments - e.g. shared experiments not associated with a subject
             projectChildrenItems.addAll(
                     loadExperimentItems(projectData.getExperiments(), snapshotQuery,
