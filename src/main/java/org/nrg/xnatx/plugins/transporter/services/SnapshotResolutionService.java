@@ -8,6 +8,4 @@ import org.nrg.xnatx.plugins.transporter.model.SnapshotDefinition;
 public interface SnapshotResolutionService {
     public ResolvedSnapshot resolveSnapshotDefinition(SnapshotDefinition snapshotDefinition, UserI userI);
 
-    public MirroredSnapshot mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception;
-
 }

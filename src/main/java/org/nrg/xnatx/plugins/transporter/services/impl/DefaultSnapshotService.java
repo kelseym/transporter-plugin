@@ -10,6 +10,7 @@ import org.nrg.xnat.services.archive.CatalogService;
 import org.nrg.xnatx.plugins.transporter.exceptions.SnapshotPermissionsException;
 import org.nrg.xnatx.plugins.transporter.exceptions.SnapshotValidationException;
 import org.nrg.xnatx.plugins.transporter.model.*;
+import org.nrg.xnatx.plugins.transporter.services.SnapshotMirrorService;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotPreferences;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotResolutionService;
 import org.nrg.xnatx.plugins.transporter.services.SnapshotService;
@@ -30,16 +31,19 @@ public class DefaultSnapshotService implements SnapshotService {
     private final TransporterConfigService transporterConfigService;
 
     private final SnapshotResolutionService snapshotResolutionService;
+    private final SnapshotMirrorService snapshotMirrorService;
 
     @Autowired
     public DefaultSnapshotService(final CatalogService catalogService,
                                   final SnapshotPreferences snapshotPreferences,
                                   final TransporterConfigService transporterConfigService,
-                                  final SnapshotResolutionService snapshotResolutionService) {
+                                  final SnapshotResolutionService snapshotResolutionService,
+                                  final SnapshotMirrorService snapshotMirrorService) {
         this.catalogService = catalogService;
         this.snapshotPreferences = snapshotPreferences;
         this.transporterConfigService = transporterConfigService;
         this.snapshotResolutionService = snapshotResolutionService;
+        this.snapshotMirrorService = snapshotMirrorService;
     }
 
     @Override
@@ -67,8 +71,8 @@ public class DefaultSnapshotService implements SnapshotService {
     }
 
     @Override
-    public MirroredSnapshot mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception {
-        return snapshotResolutionService.mirrorSnapshot(resolvedSnapshot);
+    public String mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception {
+        return snapshotMirrorService.mirrorAndCacheSnapshot(resolvedSnapshot);
     }
 
 

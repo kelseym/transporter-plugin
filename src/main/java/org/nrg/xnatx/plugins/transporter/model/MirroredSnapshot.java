@@ -12,6 +12,8 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class MirroredSnapshot extends ResolvedSnapshot {
 
+    private String snapshotId;
+
     static public MirroredSnapshot create(ResolvedSnapshot resolvedSnapshot, String updatedRootPath) {
         MirroredSnapshot mirroredSnapshot = new MirroredSnapshot();
         mirroredSnapshot.setSnapshotDefinition(resolvedSnapshot.getSnapshotDefinition());

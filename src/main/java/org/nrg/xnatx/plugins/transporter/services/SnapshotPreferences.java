@@ -19,6 +19,7 @@ import java.nio.file.Paths;
         description = "Data Snapshot preferences.")
 public class SnapshotPreferences extends AbstractPreferenceBean {
     public static final String SNAPSHOT_PATH = "snapshotPath";
+    public static final String MIRROR_TIMEOUT = "mirrorTimeout";
 
     protected SnapshotPreferences(NrgPreferenceService preferenceService) {
         super(preferenceService);
@@ -49,6 +50,19 @@ public class SnapshotPreferences extends AbstractPreferenceBean {
     private void checkSnapshotPath(String path) {
         if (!Files.isDirectory(Paths.get(path))){
             log.error("Snapshot path {} is not a directory.", path);
+        }
+    }
+
+    @NrgPreference(defaultValue = "60")
+    public Integer getMirrorTimeout() {
+        return getIntegerValue(MIRROR_TIMEOUT);
+    }
+
+    public void setMirrorTimeout(final Integer mirrorTimeout) {
+        try {
+            set(String.valueOf(mirrorTimeout < 1 ? 1 : mirrorTimeout), MIRROR_TIMEOUT);
+        } catch (InvalidPreferenceName e) {
+            log.error("Invalid preference name {}: something is wrong here.", MIRROR_TIMEOUT, e);
         }
     }
 }

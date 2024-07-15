@@ -56,13 +56,13 @@ public class SnapshotRestApi  extends AbstractXapiRestController {
     @XapiRequestMapping(restrictTo = AccessLevel.Authenticated, value = {"/mirror"}, method = POST, consumes = JSON)
     @ApiOperation(value = "Create a new snapshot definition. Return a resolved and mirrored snapshot manifest.",
             notes = "DOES NOT WORK PROPERLY IN SWAGGER UI")
-    public ResponseEntity<ResolvedSnapshot> createMirroredSnapshot(@RequestBody SnapshotRequest snapshotRequest)
+    public ResponseEntity<String> createMirroredSnapshot(@RequestBody SnapshotRequest snapshotRequest)
             throws Exception {
         ResolvedSnapshot resolvedSnapshot =
                 snapshotService.createSnapshot(
                         SnapshotDefinition.createFromRequest(snapshotRequest),getUser(), false);
-        MirroredSnapshot mirroredSnapshot = snapshotService.mirrorSnapshot(resolvedSnapshot);
-        return ResponseEntity.ok(mirroredSnapshot);
+        String snapshotId = snapshotService.mirrorSnapshot(resolvedSnapshot);
+        return ResponseEntity.ok(snapshotId);
     }
 
 

@@ -12,5 +12,5 @@ public interface SnapshotService {
 
     void validateSnapshotDefinition(SnapshotDefinition snapshotDefinition, UserI userI) throws Exception;
 
-    MirroredSnapshot mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception;
+    String mirrorSnapshot(ResolvedSnapshot resolvedSnapshot) throws Exception;
 }

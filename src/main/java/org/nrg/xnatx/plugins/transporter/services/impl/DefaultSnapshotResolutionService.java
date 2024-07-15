@@ -33,60 +33,11 @@ import static org.nrg.xnatx.plugins.transporter.model.SnapshotDefinition.Hierarc
 @Service
 public class DefaultSnapshotResolutionService implements SnapshotResolutionService {
 
-    private final static String SNAP_DIR_PREFIX = "snap_";
-
     private final SnapshotPreferences snapshotPreferences;
 
     @Autowired
     public DefaultSnapshotResolutionService(final SnapshotPreferences snapshotPreferences) {
         this.snapshotPreferences = snapshotPreferences;
-    }
-
-    @Override
-    public MirroredSnapshot mirrorSnapshot(final ResolvedSnapshot resolvedSnapshot) throws Exception {
-        return mirrorSnapshot(resolvedSnapshot, getNewSnapshotDirectory());
-    }
-
-    //** Snapshot Mirroring Methods **//
-    private MirroredSnapshot mirrorSnapshot(final ResolvedSnapshot resolvedSnapshot, @Nonnull Path targetPath) throws Exception {
-
-        Map<Integer, Path> relativeSnapshotPathMap = resolveSnapshotTargetHierarchy(
-                resolvedSnapshot.getSnapshotDefinition().getHierarchyScheme(), resolvedSnapshot, null);
-
-        // Mirror resource directories of project, subject, and experiment items - depending on the hierarchy scheme
-
-        MirroredSnapshot mirroredSnapshot = MirroredSnapshot.create(resolvedSnapshot, targetPath.toString());
-        mirroredSnapshot.streamSnapItems(SnapItem.FileType.DIRECTORY)
-                .filter(si -> si.getXnatType().equals(SnapItem.XnatType.RESOURCE))
-                .filter(si -> relativeSnapshotPathMap.containsKey(si.hashCode()))
-                .forEach(snapItem -> {
-                    try {
-                        if (snapItem.getPath() == null) {
-                            log.error("Resource path for {} is null", snapItem.getLabel());
-                            throw new IOException("Resource path is null");
-                        }
-                        Path sourcePath = Paths.get(snapItem.getPath());
-                        Path snapshotRelativePath = relativeSnapshotPathMap.get(snapItem.hashCode());
-                        snapItem.setRelativePath(snapshotRelativePath.toString());
-                        Path destinationPath = targetPath.resolve(snapshotRelativePath);
-                        if (!Files.isDirectory(sourcePath)) {
-                            throw new IOException("Source directory path is not a directory type: " + sourcePath.toString());
-                        } else
-                            // Check if the destination path already exists and is not the same as the target path
-                            if (Files.exists(destinationPath)) {
-                            throw new IOException("Destination path already exists: " + destinationPath.toString());
-                        } else {
-                            Files.createDirectories(destinationPath.getParent());
-                            Files.createSymbolicLink(destinationPath, sourcePath);
-                        }
-                    } catch (IOException e) {
-                        log.error("Could not mirror resource directory: {}", snapItem.getPath());
-                        log.error(e.getMessage());
-                        throw new RuntimeException("Could not mirror resource directory", e);
-                    }
-                });
-
-        return mirroredSnapshot;
     }
 
     @Override
@@ -103,121 +54,6 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         return resolvedSnapshot;
     }
 
-    private Map<Integer, Path> resolveSnapshotTargetHierarchy(final HierarchyScheme hierarchyScheme,
-                                                               final ResolvedSnapshot resolvedSnapshot,
-                                                               final Path targetPath) {
-        List<SnapItem> rootItems;
-        switch (hierarchyScheme) {
-            case PROJECT_SUBJECT:
-            case PROJECT_EXPERIMENT:
-                rootItems = resolvedSnapshot.streamSnapItems(SnapItem.XnatType.PROJECT)
-                        .collect(Collectors.toList());
-                break;
-            case SUBJECT:
-                rootItems = resolvedSnapshot.streamSnapItems(SnapItem.XnatType.SUBJECT)
-                        .collect(Collectors.toList());
-                break;
-            case EXPERIMENT:
-                rootItems = resolvedSnapshot.streamSnapItems(SnapItem.XnatType.EXPERIMENT)
-                        .collect(Collectors.toList());
-                break;
-            default:
-                rootItems = Collections.emptyList();
-                log.error("Unimplemented HierarchyScheme found in resolveSnapshotTargetHierarchy: {}", hierarchyScheme);
-        }
-        return targetPathBuilder(targetPath == null ? Paths.get("") : targetPath, rootItems, hierarchyScheme);
-    }
-
-    private Map<Integer, Path> targetPathBuilder(final Path parentPath, final SnapItem snapItem, HierarchyScheme hierarchyScheme) {
-        SnapItem.XnatType xnatType = snapItem.getXnatType();
-        String nodePath = "";
-        switch (xnatType) {
-            case PROJECT:
-                if (hierarchyScheme.equals(PROJECT_SUBJECT) | hierarchyScheme.equals(HierarchyScheme.PROJECT_EXPERIMENT)) {
-                    nodePath = snapItem.getId();
-                }
-                return targetPathBuilder(parentPath.resolve(nodePath), snapItem.getChildren(), hierarchyScheme);
-            case SUBJECT:
-                List<SnapItem> childItems;
-                if (hierarchyScheme.equals(PROJECT_SUBJECT) | hierarchyScheme.equals(HierarchyScheme.SUBJECT)) {
-                    nodePath = snapItem.getId();
-                    childItems = snapItem.getChildren();
-                } else {
-                    // If the hierarchy scheme doesn't include subjects, only pass along experiment children
-                    childItems = snapItem.getChildren().stream()
-                            .filter(si -> SnapItem.XnatType.EXPERIMENT.equals(si.getXnatType()))
-                            .collect(Collectors.toList());
-                }
-                return targetPathBuilder(parentPath.resolve(nodePath), childItems, hierarchyScheme);
-            case RESOURCE:
-                // Resource paths are formed from the parent path + resource id
-                return Collections.singletonMap(snapItem.hashCode(), parentPath.resolve(snapItem.getLabel()));
-            default:
-                log.error("Unimplemented XnatType found in targetPathBuilder: " + xnatType);
-            case EXPERIMENT:
-                return targetPathBuilder(parentPath.resolve(snapItem.getLabel()), snapItem.getChildren(), hierarchyScheme);
-            case SCAN:
-                return targetPathBuilder(parentPath.resolve(snapItem.getId()), snapItem.getChildren(), hierarchyScheme);
-        }
-    }
-
-    private Map<Integer, Path> targetPathBuilder(final Path parentPath, final List<SnapItem> snapItems, HierarchyScheme hierarchyScheme) {
-        return snapItems == null || snapItems.isEmpty() ? Collections.emptyMap() :
-                snapItems.stream()
-                        .map(snapItem -> targetPathBuilder(parentPath, snapItem, hierarchyScheme))
-                        .flatMap(map -> map.entrySet().stream())
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-
-
-    //private void setCommonRootPath(ResolvedSnapshot resolvedSnapshot, SnapshotDefinition snapshotDefinition) {
-//
-    //    // Find the common root path for the snapshot items and transform snapshot to root and relative paths
-    //    List<String> itemPaths =
-    //            resolvedSnapshot.streamSnapItems()
-    //                    .filter(Objects::nonNull)
-    //                    .map(SnapItem::getPath)
-    //                    .distinct()
-    //                    .filter(Objects::nonNull)
-    //                    .collect(Collectors.toList());
-//
-    //    Optional<String> commonRoot = Strings.isNullOrEmpty(""snapshotDefinition.getPathRootKey()"") ?
-    //            findCommonRoot(itemPaths) :
-    //            findKeyedRoot(findCommonRoot(itemPaths), snapshotDefinition.getPathRootKey());
-    //    try {
-    //        if (commonRoot.isPresent()){
-    //            Path root = Paths.get(commonRoot.get());
-    //            for (SnapItem snapItem: resolvedSnapshot.streamSnapItems()
-    //                    .filter(Objects::nonNull)
-    //                    .filter(si -> si.getPath() != null && !Strings.isNullOrEmpty(si.getPath()))
-    //                    .collect(Collectors.toList())) {
-    //                Path path = Paths.get(snapItem.getPath());
-    //                Path relPath = root.relativize(path);
-    //                snapItem.setPath(relPath.toString());
-    //            }
-    //            resolvedSnapshot.setRootPath(commonRoot.get());
-    //        }
-    //    } catch (Throwable e) {
-    //        log.error("Error resolving data snap", e.getMessage());
-    //    }
-    //}
-
-    private Path getNewSnapshotDirectory() throws IOException {
-        final String rootBuildPath = snapshotPreferences.getSnapshotPath();
-        final String uuid = UUID.randomUUID().toString();
-        final String buildDir = FilenameUtils.concat(rootBuildPath, SNAP_DIR_PREFIX + uuid);
-        final Path created;
-        try {
-            created = Files.createDirectory(Paths.get(buildDir));
-        } catch (IOException e) {
-            log.error("Could not create snapshot directory: " + buildDir);
-            log.error(e.getMessage());
-            throw new IOException("Could not create snapshot directory", e);
-        }
-        created.toFile().setWritable(true);
-        return created;
-    }
 
     private List<SnapItem> loadProjectItems(final SnapshotDefinition.SnapshotQuery snapshotQuery, HierarchyScheme hierarchyScheme) {
         List<SnapItem> snapItems = new ArrayList<>();
@@ -430,16 +266,4 @@ public class DefaultSnapshotResolutionService implements SnapshotResolutionServi
         return Paths.get(path1.getRoot().toString(), path1.subpath(0, len).toString());
     }
 
-    private static Optional<String> findKeyedRoot(final Optional<String> commonRoot, final String rootKey) {
-        if (commonRoot.isPresent() && !Strings.isNullOrEmpty(rootKey)) {
-            int keyIndex = commonRoot.get().indexOf(rootKey);
-            if (keyIndex == -1) {
-                return commonRoot;
-            } else {
-                return Optional.of(commonRoot.get().substring(0, keyIndex));
-            }
-        } else {
-            return Optional.empty();
-        }
-    }
 }
